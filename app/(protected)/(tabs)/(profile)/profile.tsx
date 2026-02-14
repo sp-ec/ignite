@@ -1,29 +1,31 @@
-import { VStack } from "@/components/ui/vstack";
+import DateSelector from "@/components/custom/date-selector";
+import { Box } from "@/components/ui/box";
+import { Button, ButtonText } from "@/components/ui/button";
 import { HStack } from "@/components/ui/hstack";
+import { ChevronDownIcon } from "@/components/ui/icon";
 import { Image } from "@/components/ui/image";
-import { Text, View } from "react-native";
+import { Input, InputField } from "@/components/ui/input";
 import {
 	Select,
-	SelectTrigger,
-	SelectInput,
-	SelectIcon,
-	SelectPortal,
 	SelectBackdrop,
 	SelectContent,
 	SelectDragIndicator,
 	SelectDragIndicatorWrapper,
+	SelectIcon,
+	SelectInput,
 	SelectItem,
+	SelectPortal,
+	SelectTrigger,
 } from "@/components/ui/select";
-import { ChevronDownIcon, Icon } from "@/components/ui/icon";
-import { useState } from "react";
-import { Box } from "@/components/ui/box";
-import DateSelector from "@/components/custom/date-selector";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Button, ButtonText } from "@/components/ui/button";
-import { Input, InputField } from "@/components/ui/input";
-import * as ImagePicker from "expo-image-picker";
+import { VStack } from "@/components/ui/vstack";
 import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, Text } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
 
 const onDateChange = (date: { month: string; day: string; year: string }) => {
 	console.log("Selected date:", date);
@@ -42,8 +44,32 @@ export default function IndexScreen() {
 	const [gender, setGender] = useState("");
 	const [bio, setBio] = useState("");
 	const [dob, setDob] = useState({ month: "Jan", day: "1", year: "2000" });
+	const [loading, setLoading] = useState(true);
 
 	const router = useRouter();
+
+	//const user = getAuth().currentUser;
+
+	useEffect(() => {
+		const auth = getAuth();
+		const unsubscribe = onAuthStateChanged(auth, (user) => {
+		  if (!user) {
+			router.replace("/login");
+		  } else {
+			setLoading(false);
+		  }
+		});
+	
+		return unsubscribe;
+	  }, []);
+	
+	  if (loading) {
+		return (
+		  <SafeAreaView style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+			<ActivityIndicator size="large" />
+		  </SafeAreaView>
+		);
+	  }
 
 	if (isEditing) {
 		return (
