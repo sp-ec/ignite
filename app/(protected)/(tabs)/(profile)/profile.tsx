@@ -18,62 +18,207 @@ import { ChevronDownIcon, Icon } from "@/components/ui/icon";
 import { useState } from "react";
 import { Box } from "@/components/ui/box";
 import DateSelector from "@/components/custom/date-selector";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Button, ButtonText } from "@/components/ui/button";
+import { Input, InputField } from "@/components/ui/input";
+import * as ImagePicker from "expo-image-picker";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 
 const onDateChange = (date: { month: string; day: string; year: string }) => {
 	console.log("Selected date:", date);
 	// You can also update state here if you want to keep the selected date in this component
 };
 
-export default function IndexScreen() {
-	const [photos, setPhotos] = useState<string[]>([]);
+const capitalize = (str: string) => {
+	if (!str) return str;
+	return str.charAt(0).toUpperCase() + str.slice(1);
+};
 
+export default function IndexScreen() {
+	const [isEditing, setIsEditing] = useState(false);
+	const [name, setName] = useState("");
+	const [photos, setPhotos] = useState<string[]>([]);
+	const [gender, setGender] = useState("");
+	const [bio, setBio] = useState("");
+	const [dob, setDob] = useState({ month: "Jan", day: "1", year: "2000" });
+
+	const router = useRouter();
+
+	if (isEditing) {
+		return (
+			<SafeAreaView
+				style={{
+					flex: 1,
+				}}
+			>
+				<VStack className="p-8">
+					<Input className="mb-4 w-64">
+						<InputField
+							placeholder="Name"
+							className="text-2xl"
+							value={name}
+							onChangeText={setName}
+						/>
+					</Input>
+					<Text className="text-lg mb-2">Your Photos</Text>
+					<Button
+						className="bg-zinc-200 mb-4"
+						onPress={async () => {
+							// Request permission (Required for iOS)
+							const permissionResult =
+								await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+							if (permissionResult.granted === false) {
+								alert("Permission to access camera roll is required!");
+								return;
+							}
+
+							try {
+								const result = await ImagePicker.launchImageLibraryAsync({
+									mediaTypes: ["images"], // Use ImagePicker.MediaTypeOptions.Images in older versions
+									allowsMultipleSelection: true,
+									selectionLimit: 3,
+									quality: 1,
+								});
+
+								if (!result.canceled) {
+									const uris = result.assets.map((asset) => asset.uri);
+									setPhotos(uris);
+									console.log("Selected URIs:", uris);
+								}
+							} catch (error) {
+								console.log("Picker Error: ", error);
+							}
+						}}
+					>
+						<ButtonText className="text-zinc-900 text-md">
+							Choose Photos
+						</ButtonText>
+					</Button>
+					<HStack space="md" className="mb-2 justify-around">
+						{photos.map((uri, index) => (
+							<Box key={index} className="relative">
+								<Image
+									source={{ uri: uri }}
+									alt={`Profile photo ${index + 1}`}
+									className="rounded-lg w-28 h-48"
+								/>
+							</Box>
+						))}
+					</HStack>
+					<DateSelector onDateChange={(newDate) => setDob(newDate)} />
+					<VStack>
+						<Text className="text-md">Gender</Text>
+						<Select
+							selectedValue={capitalize(gender)}
+							onValueChange={setGender}
+						>
+							<SelectTrigger>
+								<SelectInput placeholder="Select Gender" />
+								<SelectIcon as={ChevronDownIcon} />
+							</SelectTrigger>
+							<SelectPortal>
+								<SelectBackdrop />
+								<SelectContent className="text-zinc-900">
+									<SelectDragIndicatorWrapper>
+										<SelectDragIndicator />
+									</SelectDragIndicatorWrapper>
+									<SelectItem label="Man" value="man" />
+									<SelectItem label="Woman" value="woman" />
+									<SelectItem label="Non-Binary" value="non-binary" />
+									<SelectItem label="Other" value="other" />
+								</SelectContent>
+							</SelectPortal>
+						</Select>
+					</VStack>
+					<Text className="text-lg">Bio</Text>
+					<Input className="h-32 pt-2 mb-4" size="md">
+						<InputField
+							multiline={true}
+							placeholder="Write something about yourself..."
+							value={bio}
+							onChangeText={setBio}
+							textAlignVertical="top" // Keeps text at top of box
+						/>
+					</Input>
+					<Button
+						className="bg-purple-500"
+						onPress={() => {
+							// Handle save action here
+							setIsEditing(false);
+							setName(name);
+							setBio(bio);
+							setGender(gender);
+							setDob(dob);
+							setPhotos(photos);
+						}}
+					>
+						<ButtonText className="text-zinc-200 text-md">
+							Save Profile
+						</ButtonText>
+					</Button>
+				</VStack>
+			</SafeAreaView>
+		);
+	}
 	return (
-		<View>
-			<VStack className="p-3 space-y-2">
-				<Text className="text-2xl">Name</Text>
-				<Text className="text-lg">Your Photos</Text>
-				<HStack space="md" className="mb-2 justify-around">
+		<SafeAreaView
+			style={{
+				flex: 1,
+			}}
+		>
+			<VStack className="p-8">
+				<HStack className="justify-between">
+					<Text className="text-2xl mb-4 w-64">{name}</Text>
+					<Button
+						className="bg-zinc-200 w-12 h-12 p-0 rounded-lg"
+						onPress={() =>
+							router.replace(
+								"/(protected)/(tabs)/(profile)/(settings)/settings",
+							)
+						}
+					>
+						<Ionicons name="settings-outline" size={24} color={"#000"} />
+					</Button>
+				</HStack>
+
+				<Text className="text-lg mb-2">Your Photos</Text>
+				<HStack space="md" className="mb-8 justify-around">
 					{photos.map((uri, index) => (
 						<Box key={index} className="relative">
 							<Image
 								source={{ uri: uri }}
 								alt={`Profile photo ${index + 1}`}
-								size="md" // gluestack preset for 112px
-								className="rounded-lg"
+								className="rounded-lg w-28 h-48"
 							/>
 						</Box>
 					))}
 				</HStack>
-				<DateSelector onDateChange={onDateChange} />
-				<VStack>
-					<Text className="text-md">Gender</Text>
-					<Select defaultValue="Select Gender">
-						<SelectTrigger>
-							<SelectInput />
-							<SelectIcon as={ChevronDownIcon} />
-						</SelectTrigger>
-						<SelectPortal>
-							<SelectBackdrop />
-							<SelectContent className="text-zinc-900">
-								<SelectDragIndicatorWrapper>
-									<SelectDragIndicator />
-								</SelectDragIndicatorWrapper>
-								<SelectItem label="Man" value="man" />
-								<SelectItem label="Woman" value="woman" />
-								<SelectItem label="Non-Binary" value="non-binary" />
-								<SelectItem label="Other" value="other" />
-							</SelectContent>
-						</SelectPortal>
-					</Select>
+				<VStack className="mb-4">
+					<Text className="text-md mb-2">Birthdate</Text>
+					<Text className="text-md">
+						{capitalize(dob.month)} {dob.day}, {dob.year}
+					</Text>
+				</VStack>
+				<VStack className="mb-4">
+					<Text className="text-md mb-2">Gender</Text>
+					<Text className="text-md">{capitalize(gender)}</Text>
 				</VStack>
 				<Text className="text-lg">Bio</Text>
-				<Text className="text-md">
-					Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-					eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad
-					minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-					aliquip ex ea commodo consequat.{" "}
-				</Text>
+				<Text className="text-md mb-8">{bio} </Text>
+				<Button
+					className="bg-zinc-200 mb-4"
+					onPress={() => {
+						// Handle edit action here
+						setIsEditing(true);
+					}}
+				>
+					<ButtonText className="text-zinc-800 text-md">
+						Edit Profile
+					</ButtonText>
+				</Button>
 			</VStack>
-		</View>
+		</SafeAreaView>
 	);
 }
