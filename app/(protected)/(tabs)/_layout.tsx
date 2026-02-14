@@ -12,13 +12,13 @@ export default function BottomTabsLayout() {
 				tabBarShowLabel: true, // Cleaner look for bubble styles
 				tabBarStyle: {
 					backgroundColor: "#fff",
-					height: 92,
+					height: 85,
 					borderTopWidth: 0,
 					elevation: 0,
-					marginBottom: -10,
+					paddingBottom: 0,
 				},
 				tabBarLabelStyle: {
-					marginTop: 15,
+					marginTop: 17,
 					fontSize: 12,
 					fontWeight: "600",
 				},
@@ -34,16 +34,20 @@ export default function BottomTabsLayout() {
 							style={{
 								backgroundColor: focused ? "#E9D4FF" : "transparent",
 								borderRadius: 20,
-								paddingHorizontal: 35,
+								width: 70,
+								paddingHorizontal: 0,
 								paddingVertical: 25,
-								marginBottom: -10,
-								marginTop: 34,
-								paddingBlockStart: 10,
+								marginTop: 5,
 								justifyContent: "center",
 								alignItems: "center",
+								position: "absolute",
+								paddingBlockStart: 10,
+								top: 0,
+								left: -20,
+								right: 0,
 							}}
 						>
-							<Ionicons ios="heart" name="heart" size={size} color={color} />
+							<Ionicons name="heart" size={size} color={color} className="" />
 						</View>
 					),
 				}}
@@ -57,13 +61,17 @@ export default function BottomTabsLayout() {
 							style={{
 								backgroundColor: focused ? "#E9D4FF" : "transparent",
 								borderRadius: 20,
-								paddingHorizontal: 35,
+								width: 70,
+								paddingHorizontal: 0,
 								paddingVertical: 25,
-								marginBottom: -10,
-								marginTop: 34,
-								paddingBlockStart: 10,
+								marginTop: 5,
 								justifyContent: "center",
 								alignItems: "center",
+								position: "absolute",
+								paddingBlockStart: 10,
+								top: 0,
+								left: -20,
+								right: 0,
 							}}
 						>
 							<Ionicons name="chatbox-ellipses" size={size} color={color} />
@@ -80,13 +88,17 @@ export default function BottomTabsLayout() {
 							style={{
 								backgroundColor: focused ? "#E9D4FF" : "transparent",
 								borderRadius: 20,
-								paddingHorizontal: 35,
+								width: 70,
+								paddingHorizontal: 0,
 								paddingVertical: 25,
-								marginBottom: -10,
-								marginTop: 34,
-								paddingBlockStart: 10,
+								marginTop: 5,
 								justifyContent: "center",
 								alignItems: "center",
+								position: "absolute",
+								paddingBlockStart: 10,
+								top: 0,
+								left: -20,
+								right: 0,
 							}}
 						>
 							<Ionicons name="person-circle" size={size} color={color} />
