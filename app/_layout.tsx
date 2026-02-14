@@ -7,9 +7,14 @@ import {
 import { AuthProvider } from "@/utils/authContext";
 import { use, useEffect } from "react";
 
+import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
+import '@/global.css';
+
 export default function RootLayout() {
   return (
-    <AuthProvider>
+    
+    <GluestackUIProvider mode="dark">
+      <AuthProvider>
       <Stack
         screenOptions={{
           headerShown: false,
@@ -17,6 +22,8 @@ export default function RootLayout() {
       >
         <Stack.Screen name="(protected)" options={{ headerShown: false }} />
       </Stack>
+    </GluestackUIProvider>
+  
     </AuthProvider>
   );
 }
