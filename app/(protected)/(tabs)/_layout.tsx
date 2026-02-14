@@ -1,9 +1,11 @@
-import { Stack } from "expo-router";
+import { Tabs } from "expo-router";
 
-export default function RootLayout() {
+export default function BottomTabsLayout() {
   return (
-    <Stack>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-    </Stack>
+    <Tabs screenOptions={{}}>
+      <Tabs.Screen name="swipe" options={{ title: "Swipe" }} />
+      <Tabs.Screen name="chat" options={{ title: "Chat" }} />
+      <Tabs.Screen name="profile" options={{ title: "Profile" }} />
+    </Tabs>
   );
 }

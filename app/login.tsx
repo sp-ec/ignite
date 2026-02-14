@@ -1,6 +1,7 @@
 import { Text, View } from "react-native";
+import { Link } from "expo-router";
 
-export default function Chat() {
+export default function IndexScreen() {
   return (
     <View
       style={{
@@ -9,7 +10,8 @@ export default function Chat() {
         alignItems: "center",
       }}
     >
-      <Text>Chat</Text>
+      <Link href="/(protected)/(tabs)/(swipe)/swipe">Login</Link>
+      <Link href="/register">Register</Link>
     </View>
   );
 }

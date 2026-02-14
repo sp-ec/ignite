@@ -1,5 +1,4 @@
 import { Text, View } from "react-native";
-import { Link } from "expo-router";
 
 export default function IndexScreen() {
   return (
@@ -10,8 +9,7 @@ export default function IndexScreen() {
         alignItems: "center",
       }}
     >
-      <Link href="/(protected)/(tabs)/swipe">Login</Link>
-      <Link href="/register">Register</Link>
+      <Text>Swipe</Text>
     </View>
   );
 }
