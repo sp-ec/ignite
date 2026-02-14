@@ -1,79 +1,166 @@
+import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
+import { HStack } from "@/components/ui/hstack";
+import { ChevronDownIcon } from "@/components/ui/icon";
+import { Image } from "@/components/ui/image";
 import { Input, InputField } from "@/components/ui/input";
+import {
+  Select,
+  SelectBackdrop,
+  SelectContent,
+  SelectDragIndicator,
+  SelectDragIndicatorWrapper,
+  SelectIcon,
+  SelectInput,
+  SelectItem,
+  SelectPortal,
+  SelectScrollView,
+  SelectTrigger,
+} from "@/components/ui/select";
 import { Text } from "@/components/ui/text";
 import { Textarea, TextareaInput } from "@/components/ui/textarea";
-import { Pressable, ScrollView } from "react-native";
 import { VStack } from "@/components/ui/vstack";
-import { Link, router } from "expo-router";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { useState } from "react";
-import { View, Platform } from "react-native";
-import { auth } from "../FirebaseConfig";
-import { HStack } from "@/components/ui/hstack";
-import { Box } from "@/components/ui/box";
-import { Image } from "@/components/ui/image";
-import {
-	Select,
-	SelectTrigger,
-	SelectInput,
-	SelectIcon,
-	SelectPortal,
-	SelectBackdrop,
-	SelectContent,
-	SelectDragIndicator,
-	SelectDragIndicatorWrapper,
-	SelectItem,
-	SelectScrollView,
-} from "@/components/ui/select";
-import { ChevronDownIcon } from "@/components/ui/icon";
-import { launchCamera, launchImageLibrary } from "react-native-image-picker";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
+import { createUserWithEmailAndPassword, getAuth } from "firebase/auth";
+import { Timestamp, doc, setDoc } from "firebase/firestore";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import React, { useState } from "react";
+import { ScrollView } from "react-native";
+import { db, storage } from "../FirebaseConfig";
 
 export default function createAccount() {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [name, setName] = useState("");
 	const [bio, setBio] = useState("");
-	const [dob, setDob] = useState(new Date());
-	const [showDatePicker, setShowDatePicker] = useState(false);
+  const [month, setMonth] = useState("0");
+  const [day, setDay] = useState("1");
+  const [year, setYear] = useState("2000");
 	const [gender, setGender] = useState("");
 	const [photos, setPhotos] = useState<string[]>([]);
+  const [errors, setErrors] = useState<{
+    email?: string;
+    password?: string;
+    name?: string;
+    bio?: string;
+    day?: string;
+    gender?: string;
+    // TODO: at least 1 images
+  }>({});
 
 	const router = useRouter();
 
-	const handleDateChange = (event: any, selectedDate?: Date) => {
-		if (Platform.OS === "android") {
-			setShowDatePicker(false);
-		}
-		if (selectedDate) {
-			setDob(selectedDate);
-		}
-	};
+  const auth = getAuth();
 
 	const createAccount = async () => {
+    if (!validateInputs()) return;
+
 		try {
-			const user = await createUserWithEmailAndPassword(auth, email, password);
+			const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      const photoUrls = await uploadPhotos(user.uid, photos);
+
+      await setDoc(doc(db, 'users', user.uid), {
+        uid: user.uid,
+        name: name,
+        bio: bio,
+        dob: Timestamp.fromDate(new Date(Number(year), Number(month), Number(day))),
+        gender: gender,
+        photos: photoUrls
+      });
+
 			if (user) {
-				router.replace("/profile"); // FIXME: send to profile
+				router.replace("/profile");
 			}
 		} catch (error: any) {
 			console.log(error);
-			alert("Sign in failed: " + error.message);
+			alert("Create account failed: " + error.message);
 		}
 	};
 
+  const uploadPhotos = async (uid: string, uris: string[]) => {
+    const uploadedUrls: string[] = [];
+
+    for (let i = 0; i < uris.length; i++) {
+      const uri = uris[i];
+
+      const response = await fetch(uri);
+      const blob = await response.blob();
+
+      const storageRef = ref(storage, `users/${uid}/photo_${i}.jpg`);
+      await uploadBytes(storageRef, blob);
+
+      const downloadUrl = await getDownloadURL(storageRef);
+      uploadedUrls.push(downloadUrl);
+    }
+
+    return uploadedUrls;
+  };
+
+  const validateInputs = (): boolean => {
+    const newErrors: typeof errors = {};
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      newErrors.email = "Invalid email address"
+    }
+
+    if (password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters"
+    }
+
+    if (!name.trim()) {
+      newErrors.name = "Name cannot be empty"
+    }
+
+    if (name.length > 20) {
+      newErrors.name = "Name must be less than or equal to 20 characters"
+    }
+
+    if (!bio.trim()) {
+      newErrors.bio = "Bio cannot be empty"
+    }
+
+    if (bio.length > 250) {
+      newErrors.bio = "Bio must be less than or equal to 250 characters"
+    }
+
+    const dob = new Date(Number(year), Number(month), Number(day));
+    if (dob.getDate() !== Number(day)) {
+      newErrors.day = "Invalid date of birth day"
+    }
+
+    if (!gender) {
+      newErrors.gender = "Please select a gender"
+    }
+
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length > 0) {
+      alert(
+        "Create account failed from invalid fields: " +
+        Object.keys(newErrors).join(", ")
+      );
+      return false;
+    }
+
+    return true;
+  };
+
 	return (
-		<View
-			style={{
-				flex: 1,
+		<ScrollView
+			contentContainerStyle={{
+				flexGrow: 1,
 				justifyContent: "center",
 				alignItems: "center",
 			}}
+      showsVerticalScrollIndicator={false}
 		>
 			<VStack className="">
 				<Button
-					className="text-md bg-zinc-200 mb-2"
+					className="text-md bg-zinc-200 mt-8 mb-2"
 					onPress={() => {
 						router.navigate("/login");
 					}}
@@ -82,45 +169,59 @@ export default function createAccount() {
 						Back to Login
 					</ButtonText>
 				</Button>
-				<Input className="mb-2">
-					<InputField
-						placeholder="Email"
-						className=""
-						value={email}
-						onChangeText={setEmail}
-					/>
-				</Input>
-				<Input className="mb-2">
-					<InputField
-						placeholder="Password"
-						className=""
-						value={password}
-						onChangeText={setPassword}
-					/>
-				</Input>
-				<Input className="mb-2">
-					<InputField
-						placeholder="Name"
-						className=""
-						value={name}
-						onChangeText={setName}
-					/>
-				</Input>
+        <VStack className="mb-2">
+          <Input>
+            <InputField
+              placeholder="Email"
+              className=""
+              value={email}
+              onChangeText={setEmail}
+            />
+          </Input>
+          {errors.email && <Text className="text-red-500 text-sm mb-2">{errors.email}</Text>}
+        </VStack>
 
-				<Textarea
-					size="md"
-					isReadOnly={false}
-					isInvalid={false}
-					isDisabled={false}
-					className="w-90 mb-2"
-				>
-					<TextareaInput
-						className=""
-						placeholder="Bio"
-						value={bio}
-						onChangeText={setBio}
-					/>
-				</Textarea>
+        <VStack className="mb-2">
+          <Input >
+            <InputField
+              placeholder="Password"
+              className=""
+              value={password}
+              onChangeText={setPassword}
+            />
+          </Input>
+          {errors.password && <Text className="text-red-500 text-sm">{errors.password}</Text>}
+        </VStack>
+
+        <VStack className="mb-2">
+          <Input >
+            <InputField
+              placeholder="Name"
+              className=""
+              value={name}
+              onChangeText={setName}
+            />
+          </Input>
+          {errors.name && <Text className="text-red-500 text-sm">{errors.name}</Text>}
+        </VStack>
+
+        <VStack className="w-90 mb-2">
+          <Textarea
+            size="md"
+            isReadOnly={false}
+            isInvalid={false}
+            isDisabled={false}
+          >
+            <TextareaInput
+              className=""
+              placeholder="Bio"
+              value={bio}
+              onChangeText={setBio}
+            />
+          </Textarea>
+          {errors.bio && <Text className="text-red-500 text-sm">{errors.bio}</Text>}
+        </VStack>
+
 				<Text>Profile Photos</Text>
 				<Button
 					className="bg-zinc-200 mb-2"
@@ -172,7 +273,7 @@ export default function createAccount() {
 				<HStack className="mb-2">
 					<VStack className="w-20 mr-2">
 						<Text className="text-md">Month</Text>
-						<Select defaultValue="Jan">
+						<Select defaultValue="Jan" onValueChange={setMonth}>
 							<SelectTrigger>
 								<SelectInput />
 								<SelectIcon as={ChevronDownIcon} />
@@ -187,18 +288,18 @@ export default function createAccount() {
 										<SelectDragIndicatorWrapper>
 											<SelectDragIndicator />
 										</SelectDragIndicatorWrapper>
-										<SelectItem label="Jan" value="jan" />
-										<SelectItem label="Feb" value="feb" />
-										<SelectItem label="Mar" value="mar" />
-										<SelectItem label="Apr" value="apr" />
-										<SelectItem label="May" value="may" />
-										<SelectItem label="Jun" value="jun" />
-										<SelectItem label="Jul" value="jul" />
-										<SelectItem label="Aug" value="aug" />
-										<SelectItem label="Sep" value="sep" />
-										<SelectItem label="Oct" value="oct" />
-										<SelectItem label="Nov" value="nov" />
-										<SelectItem label="Dec" value="dec" />
+										<SelectItem label="Jan" value="0" />
+										<SelectItem label="Feb" value="1" />
+										<SelectItem label="Mar" value="2" />
+										<SelectItem label="Apr" value="3" />
+										<SelectItem label="May" value="4" />
+										<SelectItem label="Jun" value="5" />
+										<SelectItem label="Jul" value="6" />
+										<SelectItem label="Aug" value="7" />
+										<SelectItem label="Sep" value="8" />
+										<SelectItem label="Oct" value="9" />
+										<SelectItem label="Nov" value="10" />
+										<SelectItem label="Dec" value="11" />
 									</SelectScrollView>
 								</SelectContent>
 							</SelectPortal>
@@ -206,7 +307,7 @@ export default function createAccount() {
 					</VStack>
 					<VStack className="w-20 mr-2">
 						<Text className="text-md">Day</Text>
-						<Select defaultValue="1">
+						<Select defaultValue="1" onValueChange={setDay}>
 							<SelectTrigger>
 								<SelectInput />
 								<SelectIcon as={ChevronDownIcon} />
@@ -221,7 +322,7 @@ export default function createAccount() {
 										style={{ maxHeight: 400 }}
 										showsVerticalScrollIndicator={true}
 									>
-										{Array.from({ length: 31 }, (_, i) => (
+										{Array.from({ length: new Date(Number(year), Number(month) + 1, 0).getDate() }, (_, i) => (
 											<SelectItem
 												key={i + 1}
 												label={(i + 1).toString()}
@@ -232,10 +333,12 @@ export default function createAccount() {
 								</SelectContent>
 							</SelectPortal>
 						</Select>
+            {errors.day && <Text className="text-red-500 text-sm">{errors.day}</Text>}
+
 					</VStack>
 					<VStack className="w-28">
 						<Text className="text-md">Year</Text>
-						<Select defaultValue="2000">
+						<Select defaultValue="2000" onValueChange={setYear}>
 							<SelectTrigger>
 								<SelectInput />
 								<SelectIcon as={ChevronDownIcon} />
@@ -265,7 +368,7 @@ export default function createAccount() {
 				</HStack>
 				<VStack className="mb-2">
 					<Text className="text-md">Gender</Text>
-					<Select defaultValue="Select Gender">
+					<Select defaultValue="Select Gender" onValueChange={setGender}>
 						<SelectTrigger>
 							<SelectInput />
 							<SelectIcon as={ChevronDownIcon} />
@@ -283,13 +386,15 @@ export default function createAccount() {
 							</SelectContent>
 						</SelectPortal>
 					</Select>
+          {errors.gender && <Text className="text-red-500 text-sm">{errors.gender}</Text>}
+
 				</VStack>
-				<Button className="bg-purple-600" onPress={createAccount}>
+				<Button className="bg-purple-600 mb-8" onPress={createAccount}>
 					<ButtonText className="text-zinc-200 text-md">
 						Create Account
 					</ButtonText>
 				</Button>
 			</VStack>
-		</View>
+		</ScrollView>
 	);
 }
