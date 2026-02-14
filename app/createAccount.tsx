@@ -5,17 +5,17 @@ import { ChevronDownIcon } from "@/components/ui/icon";
 import { Image } from "@/components/ui/image";
 import { Input, InputField } from "@/components/ui/input";
 import {
-	Select,
-	SelectBackdrop,
-	SelectContent,
-	SelectDragIndicator,
-	SelectDragIndicatorWrapper,
-	SelectIcon,
-	SelectInput,
-	SelectItem,
-	SelectPortal,
-	SelectScrollView,
-	SelectTrigger,
+  Select,
+  SelectBackdrop,
+  SelectContent,
+  SelectDragIndicator,
+  SelectDragIndicatorWrapper,
+  SelectIcon,
+  SelectInput,
+  SelectItem,
+  SelectPortal,
+  SelectScrollView,
+  SelectTrigger,
 } from "@/components/ui/select";
 import { Text } from "@/components/ui/text";
 import { Textarea, TextareaInput } from "@/components/ui/textarea";
@@ -23,9 +23,9 @@ import { VStack } from "@/components/ui/vstack";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { createUserWithEmailAndPassword, getAuth } from "firebase/auth";
-import { Timestamp, collection, doc, setDoc } from "firebase/firestore";
+import { Timestamp, doc, setDoc } from "firebase/firestore";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
-import { useState } from "react";
+import React, { useState } from "react";
 import { View } from "react-native";
 import { db, storage } from "../FirebaseConfig";
 
@@ -39,15 +39,25 @@ export default function createAccount() {
   const [year, setYear] = useState("2000");
 	const [gender, setGender] = useState("");
 	const [photos, setPhotos] = useState<string[]>([]);
-
-	
+  const [errors, setErrors] = useState<{
+    email?: string;
+    password?: string;
+    name?: string;
+    bio?: string;
+    year?: string;
+    month?: string;
+    day?: string;
+    gender?: string;
+    // TODO: at least 1 images
+  }>({});
 
 	const router = useRouter();
 
   const auth = getAuth();
-  const userCollection = collection(db, 'users');
 
 	const createAccount = async () => {
+    if (!validateInputs()) return;
+
 		try {
 			const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
@@ -91,6 +101,64 @@ export default function createAccount() {
     return uploadedUrls;
   };
 
+  const validateInputs = (): boolean => {
+    const newErrors: typeof errors = {};
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      newErrors.email = "Invalid email address"
+    }
+
+    if (password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters"
+    }
+
+    if (!name.trim()) {
+      newErrors.name = "Name cannot be empty"
+    }
+
+    if (name.length > 20) {
+      newErrors.name = "Name must be less than or equal to 20 characters"
+    }
+
+    if (!bio.trim()) {
+      newErrors.bio = "Bio cannot be empty"
+    }
+
+    if (bio.length > 250) {
+      newErrors.bio = "Bio must be less than or equal to 250 characters"
+    }
+
+    const dob = new Date(Number(year), Number(month), Number(day));
+    if (dob.getFullYear() !== Number(year)) {
+      newErrors.year = "Invalid date of birth year"
+    }
+
+    if (dob.getMonth() !== Number(month)) {
+      newErrors.month = "Invalid date of birth month"
+    }
+
+    if (dob.getDate() !== Number(day)) {
+      newErrors.day = "Invalid date of birth day"
+    }
+
+    if (!gender) {
+      newErrors.gender = "Please select a gender"
+    }
+
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length > 0) {
+      alert(
+        "Create account failed from invalid fields: " +
+        Object.keys(newErrors).join(", ")
+      );
+      return false;
+    }
+
+    return true;
+  };
+
 	return (
 		<View
 			style={{
@@ -110,45 +178,59 @@ export default function createAccount() {
 						Back to Login
 					</ButtonText>
 				</Button>
-				<Input className="mb-2">
-					<InputField
-						placeholder="Email"
-						className=""
-						value={email}
-						onChangeText={setEmail}
-					/>
-				</Input>
-				<Input className="mb-2">
-					<InputField
-						placeholder="Password"
-						className=""
-						value={password}
-						onChangeText={setPassword}
-					/>
-				</Input>
-				<Input className="mb-2">
-					<InputField
-						placeholder="Name"
-						className=""
-						value={name}
-						onChangeText={setName}
-					/>
-				</Input>
+        <VStack className="mb-2">
+          <Input>
+            <InputField
+              placeholder="Email"
+              className=""
+              value={email}
+              onChangeText={setEmail}
+            />
+          </Input>
+          {errors.email && <Text className="text-red-500 text-sm mb-2">{errors.email}</Text>}
+        </VStack>
 
-				<Textarea
-					size="md"
-					isReadOnly={false}
-					isInvalid={false}
-					isDisabled={false}
-					className="w-90 mb-2"
-				>
-					<TextareaInput
-						className=""
-						placeholder="Bio"
-						value={bio}
-						onChangeText={setBio}
-					/>
-				</Textarea>
+        <VStack className="mb-2">
+          <Input >
+            <InputField
+              placeholder="Password"
+              className=""
+              value={password}
+              onChangeText={setPassword}
+            />
+          </Input>
+          {errors.password && <Text className="text-red-500 text-sm">{errors.password}</Text>}
+        </VStack>
+
+        <VStack className="mb-2">
+          <Input >
+            <InputField
+              placeholder="Name"
+              className=""
+              value={name}
+              onChangeText={setName}
+            />
+          </Input>
+          {errors.name && <Text className="text-red-500 text-sm">{errors.name}</Text>}
+        </VStack>
+
+        <VStack className="w-90 mb-2">
+          <Textarea
+            size="md"
+            isReadOnly={false}
+            isInvalid={false}
+            isDisabled={false}
+          >
+            <TextareaInput
+              className=""
+              placeholder="Bio"
+              value={bio}
+              onChangeText={setBio}
+            />
+          </Textarea>
+          {errors.bio && <Text className="text-red-500 text-sm">{errors.bio}</Text>}
+        </VStack>
+
 				<Text>Profile Photos</Text>
 				<Button
 					className="bg-zinc-200 mb-2"
@@ -231,6 +313,8 @@ export default function createAccount() {
 								</SelectContent>
 							</SelectPortal>
 						</Select>
+            {errors.month && <Text className="text-red-500 text-sm">{errors.month}</Text>}
+
 					</VStack>
 					<VStack className="w-20 mr-2">
 						<Text className="text-md">Day</Text>
@@ -260,6 +344,8 @@ export default function createAccount() {
 								</SelectContent>
 							</SelectPortal>
 						</Select>
+            {errors.day && <Text className="text-red-500 text-sm">{errors.day}</Text>}
+
 					</VStack>
 					<VStack className="w-28">
 						<Text className="text-md">Year</Text>
@@ -289,6 +375,8 @@ export default function createAccount() {
 								</SelectContent>
 							</SelectPortal>
 						</Select>
+            {errors.year && <Text className="text-red-500 text-sm">{errors.year}</Text>}
+
 					</VStack>
 				</HStack>
 				<VStack className="mb-2">
@@ -311,6 +399,8 @@ export default function createAccount() {
 							</SelectContent>
 						</SelectPortal>
 					</Select>
+          {errors.gender && <Text className="text-red-500 text-sm">{errors.gender}</Text>}
+
 				</VStack>
 				<Button className="bg-purple-600" onPress={createAccount}>
 					<ButtonText className="text-zinc-200 text-md">
