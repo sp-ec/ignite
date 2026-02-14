@@ -26,7 +26,7 @@ import { createUserWithEmailAndPassword, getAuth } from "firebase/auth";
 import { Timestamp, doc, setDoc } from "firebase/firestore";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import React, { useState } from "react";
-import { View } from "react-native";
+import { ScrollView } from "react-native";
 import { db, storage } from "../FirebaseConfig";
 
 export default function createAccount() {
@@ -44,8 +44,6 @@ export default function createAccount() {
     password?: string;
     name?: string;
     bio?: string;
-    year?: string;
-    month?: string;
     day?: string;
     gender?: string;
     // TODO: at least 1 images
@@ -130,14 +128,6 @@ export default function createAccount() {
     }
 
     const dob = new Date(Number(year), Number(month), Number(day));
-    if (dob.getFullYear() !== Number(year)) {
-      newErrors.year = "Invalid date of birth year"
-    }
-
-    if (dob.getMonth() !== Number(month)) {
-      newErrors.month = "Invalid date of birth month"
-    }
-
     if (dob.getDate() !== Number(day)) {
       newErrors.day = "Invalid date of birth day"
     }
@@ -160,16 +150,17 @@ export default function createAccount() {
   };
 
 	return (
-		<View
-			style={{
-				flex: 1,
+		<ScrollView
+			contentContainerStyle={{
+				flexGrow: 1,
 				justifyContent: "center",
 				alignItems: "center",
 			}}
+      showsVerticalScrollIndicator={false}
 		>
 			<VStack className="">
 				<Button
-					className="text-md bg-zinc-200 mb-2"
+					className="text-md bg-zinc-200 mt-8 mb-2"
 					onPress={() => {
 						router.navigate("/login");
 					}}
@@ -313,8 +304,6 @@ export default function createAccount() {
 								</SelectContent>
 							</SelectPortal>
 						</Select>
-            {errors.month && <Text className="text-red-500 text-sm">{errors.month}</Text>}
-
 					</VStack>
 					<VStack className="w-20 mr-2">
 						<Text className="text-md">Day</Text>
@@ -375,8 +364,6 @@ export default function createAccount() {
 								</SelectContent>
 							</SelectPortal>
 						</Select>
-            {errors.year && <Text className="text-red-500 text-sm">{errors.year}</Text>}
-
 					</VStack>
 				</HStack>
 				<VStack className="mb-2">
@@ -402,12 +389,12 @@ export default function createAccount() {
           {errors.gender && <Text className="text-red-500 text-sm">{errors.gender}</Text>}
 
 				</VStack>
-				<Button className="bg-purple-600" onPress={createAccount}>
+				<Button className="bg-purple-600 mb-8" onPress={createAccount}>
 					<ButtonText className="text-zinc-200 text-md">
 						Create Account
 					</ButtonText>
 				</Button>
 			</VStack>
-		</View>
+		</ScrollView>
 	);
 }
