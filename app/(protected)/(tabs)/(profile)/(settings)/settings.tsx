@@ -1,30 +1,39 @@
-import { VStack } from "@/components/ui/vstack";
-import { Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { auth } from "@/FirebaseConfig";
 import { Button, ButtonText } from "@/components/ui/button";
-import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
+import {
+	Checkbox,
+	CheckboxIcon,
+	CheckboxIndicator,
+	CheckboxLabel,
+} from "@/components/ui/checkbox";
 import { HStack } from "@/components/ui/hstack";
+import { CheckIcon } from "@/components/ui/icon";
 import {
 	Slider,
 	SliderFilledTrack,
 	SliderThumb,
 	SliderTrack,
 } from "@/components/ui/slider";
+import { VStack } from "@/components/ui/vstack";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { getAuth } from "firebase/auth";
 import { useState } from "react";
-import {
-	Checkbox,
-	CheckboxIndicator,
-	CheckboxLabel,
-	CheckboxIcon,
-} from "@/components/ui/checkbox";
-import { CheckIcon } from "@/components/ui/icon";
+import { Text } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SettingsScreen() {
 	const [minAge, setMinAge] = useState(18);
 	const [maxAge, setMaxAge] = useState(60);
 
 	const router = useRouter();
+
+	getAuth().onAuthStateChanged((user) => {
+		if (!user) {
+			router.replace('/');
+		}
+	});
+
 	return (
 		<SafeAreaView
 			style={{
@@ -122,7 +131,7 @@ export default function SettingsScreen() {
 					</CheckboxIndicator>
 					<CheckboxLabel>Other</CheckboxLabel>
 				</Checkbox>
-				<Button className="bg-rose-500 mb-2 ">
+				<Button className="bg-rose-500 mb-2 " onPress={() => auth.signOut()}>
 					<ButtonText className="text-zinc-200 text-md">Log Out</ButtonText>
 				</Button>
 			</VStack>
