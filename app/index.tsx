@@ -11,7 +11,7 @@ export default function IndexScreen() {
       }}
     >
       <Link href="/(protected)/(tabs)/(swipe)/swipe">Login</Link>
-      <Link href="/register">Register</Link>
+      <Link href="/createAccount">Register</Link>
     </View>
   );
 }

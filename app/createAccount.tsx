@@ -1,7 +1,4 @@
 import { Text, View } from "react-native";
-import { Link } from "expo-router";
-import { useContext } from "react";
-import { AuthContext } from "@/utils/authContext";
 import {
   Button,
   ButtonText,
@@ -9,12 +6,11 @@ import {
   ButtonIcon,
   ButtonGroup,
 } from "@/components/ui/button";
+import { AuthContext } from "@/utils/authContext";
 import { VStack } from "@/components/ui/vstack";
 import { Input, InputField } from "@/components/ui/input";
 
-export default function Login() {
-  const authContext = useContext(AuthContext);
-
+export default function createAccount() {
   return (
     <View
       style={{
@@ -30,12 +26,7 @@ export default function Login() {
         <Input className="mb-2 text-zinc-900">
           <InputField placeholder="Password" className="text-black" />
         </Input>
-        <Button className="bg-purple-500 mb-2 " onPress={authContext.logIn}>
-          <ButtonText className="text-zinc-200 text-md">Log in</ButtonText>
-        </Button>
-        <Button className="text-zinc-900 text-sm bg-zinc-200">
-          <Link href="/createAccount">Create Account</Link>
-        </Button>
+        <Button className="text-zinc-900 text-sm bg-zinc-200">Register</Button>
       </VStack>
     </View>
   );
