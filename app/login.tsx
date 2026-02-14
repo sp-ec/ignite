@@ -1,7 +1,7 @@
 import { Button, ButtonText } from "@/components/ui/button";
 import { Input, InputField } from "@/components/ui/input";
 import { VStack } from "@/components/ui/vstack";
-import { Link, router } from "expo-router";
+import { router, useRouter } from "expo-router";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { useState } from "react";
 import { View } from "react-native";
@@ -10,6 +10,7 @@ import { auth } from "../FirebaseConfig";
 export default function Login() {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
+	const router = useRouter();
 
 	const signIn = async () => {
 		try {
@@ -51,9 +52,15 @@ export default function Login() {
 				<Button className="bg-purple-500 mb-2 " onPress={signIn}>
 					<ButtonText className="text-zinc-200 text-md">Log in</ButtonText>
 				</Button>
-				<Button className="text-md bg-zinc-200 mb-2">
+
+				<Button
+					className="text-md bg-zinc-200 mb-2"
+					onPress={() => {
+						router.navigate("/createAccount");
+					}}
+				>
 					<ButtonText className="text-zinc-900 text-md">
-						<Link href="/createAccount">Create Account</Link>
+						Create Account
 					</ButtonText>
 				</Button>
 			</VStack>

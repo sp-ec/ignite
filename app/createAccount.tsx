@@ -28,6 +28,7 @@ import {
 import { ChevronDownIcon } from "@/components/ui/icon";
 import { launchCamera, launchImageLibrary } from "react-native-image-picker";
 import * as ImagePicker from "expo-image-picker";
+import { useRouter } from "expo-router";
 
 export default function createAccount() {
 	const [email, setEmail] = useState("");
@@ -38,6 +39,8 @@ export default function createAccount() {
 	const [showDatePicker, setShowDatePicker] = useState(false);
 	const [gender, setGender] = useState("");
 	const [photos, setPhotos] = useState<string[]>([]);
+
+	const router = useRouter();
 
 	const handleDateChange = (event: any, selectedDate?: Date) => {
 		if (Platform.OS === "android") {
@@ -52,7 +55,7 @@ export default function createAccount() {
 		try {
 			const user = await createUserWithEmailAndPassword(auth, email, password);
 			if (user) {
-				router.replace("../(protected)/(tabs)/(swipe)/swipe.tsx"); // FIXME: send to profile
+				router.replace("/profile"); // FIXME: send to profile
 			}
 		} catch (error: any) {
 			console.log(error);
@@ -69,9 +72,14 @@ export default function createAccount() {
 			}}
 		>
 			<VStack className="">
-				<Button className="text-md bg-zinc-200 mb-2">
+				<Button
+					className="text-md bg-zinc-200 mb-2"
+					onPress={() => {
+						router.navigate("/login");
+					}}
+				>
 					<ButtonText className="text-zinc-900 text-md">
-						<Link href="/login">Back to Login</Link>
+						Back to Login
 					</ButtonText>
 				</Button>
 				<Input className="mb-2">
