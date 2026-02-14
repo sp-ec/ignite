@@ -14,6 +14,7 @@ import {
   SelectDragIndicatorWrapper,
   SelectItem,
 } from "@/components/ui/select";
+import { CloseIcon, Icon } from "@/components/ui/icon";
 
 export default function IndexScreen() {
   return (
@@ -51,11 +52,11 @@ export default function IndexScreen() {
             <Select>
               <SelectTrigger>
                 <SelectInput />
-                {/* <SelectIcon as={IconComponent} /> */}
+                <SelectIcon as={CloseIcon} />
               </SelectTrigger>
               <SelectPortal>
                 <SelectBackdrop />
-                <SelectContent>
+                <SelectContent className="text-zinc-900">
                   <SelectDragIndicatorWrapper>
                     <SelectDragIndicator />
                   </SelectDragIndicatorWrapper>
