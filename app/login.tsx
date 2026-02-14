@@ -2,7 +2,7 @@ import { Text, View } from "react-native";
 import { Link } from "expo-router";
 import { useContext } from "react";
 import { AuthContext } from "@/utils/authContext";
-import { Button } from "@react-navigation/elements";
+import { Button } from "@/components/ui/button";
 
 export default function Login() {
   const authContext = useContext(AuthContext);
