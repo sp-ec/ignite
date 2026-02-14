@@ -5,23 +5,23 @@ import { ChevronDownIcon } from "@/components/ui/icon";
 import { Image } from "@/components/ui/image";
 import { Input, InputField } from "@/components/ui/input";
 import {
-  Select,
-  SelectBackdrop,
-  SelectContent,
-  SelectDragIndicator,
-  SelectDragIndicatorWrapper,
-  SelectIcon,
-  SelectInput,
-  SelectItem,
-  SelectPortal,
-  SelectScrollView,
-  SelectTrigger,
+	Select,
+	SelectBackdrop,
+	SelectContent,
+	SelectDragIndicator,
+	SelectDragIndicatorWrapper,
+	SelectIcon,
+	SelectInput,
+	SelectItem,
+	SelectPortal,
+	SelectScrollView,
+	SelectTrigger,
 } from "@/components/ui/select";
 import { Text } from "@/components/ui/text";
 import { Textarea, TextareaInput } from "@/components/ui/textarea";
 import { VStack } from "@/components/ui/vstack";
 import * as ImagePicker from "expo-image-picker";
-import { Link, router } from "expo-router";
+import { useRouter } from "expo-router";
 import { createUserWithEmailAndPassword, getAuth } from "firebase/auth";
 import { Timestamp, collection, doc, setDoc } from "firebase/firestore";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
@@ -39,6 +39,10 @@ export default function createAccount() {
   const [year, setYear] = useState("2000");
 	const [gender, setGender] = useState("");
 	const [photos, setPhotos] = useState<string[]>([]);
+
+	
+
+	const router = useRouter();
 
   const auth = getAuth();
   const userCollection = collection(db, 'users');
@@ -96,9 +100,14 @@ export default function createAccount() {
 			}}
 		>
 			<VStack className="">
-				<Button className="text-md bg-zinc-200 mb-2">
+				<Button
+					className="text-md bg-zinc-200 mb-2"
+					onPress={() => {
+						router.navigate("/login");
+					}}
+				>
 					<ButtonText className="text-zinc-900 text-md">
-						<Link href="/login">Back to Login</Link>
+						Back to Login
 					</ButtonText>
 				</Button>
 				<Input className="mb-2">

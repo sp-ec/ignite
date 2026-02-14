@@ -17,6 +17,12 @@ import {
 import { ChevronDownIcon, Icon } from "@/components/ui/icon";
 import { useState } from "react";
 import { Box } from "@/components/ui/box";
+import DateSelector from "@/components/custom/date-selector";
+
+const onDateChange = (date: { month: string; day: string; year: string }) => {
+	console.log("Selected date:", date);
+	// You can also update state here if you want to keep the selected date in this component
+};
 
 export default function IndexScreen() {
 	const [photos, setPhotos] = useState<string[]>([]);
@@ -35,34 +41,31 @@ export default function IndexScreen() {
 								size="md" // gluestack preset for 112px
 								className="rounded-lg"
 							/>
-							{/* Optional: Remove button overlay */}
 						</Box>
 					))}
 				</HStack>
-				<HStack className="space-x-10 justify-around">
-					<Text className="text-lg">Birthday</Text>
-					<VStack>
-						<Text className="text-md">Gender</Text>
-						<Select defaultValue="Select Gender">
-							<SelectTrigger>
-								<SelectInput />
-								<SelectIcon as={ChevronDownIcon} />
-							</SelectTrigger>
-							<SelectPortal>
-								<SelectBackdrop />
-								<SelectContent className="text-zinc-900">
-									<SelectDragIndicatorWrapper>
-										<SelectDragIndicator />
-									</SelectDragIndicatorWrapper>
-									<SelectItem label="Man" value="man" />
-									<SelectItem label="Woman" value="woman" />
-									<SelectItem label="Non-Binary" value="non-binary" />
-									<SelectItem label="Other" value="other" />
-								</SelectContent>
-							</SelectPortal>
-						</Select>
-					</VStack>
-				</HStack>
+				<DateSelector onDateChange={onDateChange} />
+				<VStack>
+					<Text className="text-md">Gender</Text>
+					<Select defaultValue="Select Gender">
+						<SelectTrigger>
+							<SelectInput />
+							<SelectIcon as={ChevronDownIcon} />
+						</SelectTrigger>
+						<SelectPortal>
+							<SelectBackdrop />
+							<SelectContent className="text-zinc-900">
+								<SelectDragIndicatorWrapper>
+									<SelectDragIndicator />
+								</SelectDragIndicatorWrapper>
+								<SelectItem label="Man" value="man" />
+								<SelectItem label="Woman" value="woman" />
+								<SelectItem label="Non-Binary" value="non-binary" />
+								<SelectItem label="Other" value="other" />
+							</SelectContent>
+						</SelectPortal>
+					</Select>
+				</VStack>
 				<Text className="text-lg">Bio</Text>
 				<Text className="text-md">
 					Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do

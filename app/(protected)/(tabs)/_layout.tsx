@@ -1,7 +1,6 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { View } from "react-native";
-import { SymbolWeight } from "expo-symbols";
 
 export default function BottomTabsLayout() {
 	return (
@@ -44,7 +43,7 @@ export default function BottomTabsLayout() {
 								alignItems: "center",
 							}}
 						>
-							<Ionicons name="heart" size={size} color={color} />
+							<Ionicons ios="heart" name="heart" size={size} color={color} />
 						</View>
 					),
 				}}

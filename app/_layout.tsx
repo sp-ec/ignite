@@ -3,6 +3,8 @@ import { Box } from "@/components/ui/box";
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import "@/global.css";
 import { useState } from "react";
+import { useFonts } from "expo-font";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function RootLayout() {
 	const [colorMode, setColorMode] = useState<"light" | "dark">("light");
