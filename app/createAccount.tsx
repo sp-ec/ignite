@@ -1,4 +1,6 @@
 import { Text, View } from "react-native";
+import { Link } from "expo-router";
+
 import {
   Button,
   ButtonText,
@@ -20,13 +22,22 @@ export default function createAccount() {
       }}
     >
       <VStack>
+        <Button className="text-md bg-zinc-200 mb-2">
+          <ButtonText className="text-zinc-900 text-md">
+            <Link href="/login">Back to Login</Link>
+          </ButtonText>
+        </Button>
         <Input className="mb-2 text-zinc-900">
           <InputField placeholder="Email" className="text-black" />
         </Input>
         <Input className="mb-2 text-zinc-900">
           <InputField placeholder="Password" className="text-black" />
         </Input>
-        <Button className="text-zinc-900 text-sm bg-zinc-200">Register</Button>
+        <Button className="bg-purple-500">
+          <ButtonText className="text-zinc-200 text-md">
+            Create Account
+          </ButtonText>
+        </Button>
       </VStack>
     </View>
   );

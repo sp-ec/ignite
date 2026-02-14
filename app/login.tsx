@@ -33,8 +33,10 @@ export default function Login() {
         <Button className="bg-purple-500 mb-2 " onPress={authContext.logIn}>
           <ButtonText className="text-zinc-200 text-md">Log in</ButtonText>
         </Button>
-        <Button className="text-zinc-900 text-sm bg-zinc-200">
-          <Link href="/createAccount">Create Account</Link>
+        <Button className="text-md bg-zinc-200 mb-2">
+          <ButtonText className="text-zinc-900 text-md">
+            <Link href="/createAccount">Create Account</Link>
+          </ButtonText>
         </Button>
       </VStack>
     </View>
