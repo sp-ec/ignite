@@ -15,7 +15,7 @@ export default function Login() {
 		try {
 			const user = await signInWithEmailAndPassword(auth, email, password);
 			if (user) {
-				router.replace("../(protected)/(tabs)/(swipe)/swipe.tsx");
+				router.replace("/swipe");
 			}
 		} catch (error: any) {
 			console.log(error);

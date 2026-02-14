@@ -1,9 +1,13 @@
 import { Stack } from "expo-router";
 
 export default function SwipeLayout() {
-  return (
-    <Stack>
-      <Stack.Screen name="index" options={{ title: "Swipe" }} />
-    </Stack>
-  );
+	return (
+		<Stack
+			screenOptions={{
+				headerShown: false,
+			}}
+		>
+			<Stack.Screen name="swipe" options={{ title: "Swipe" }} />
+		</Stack>
+	);
 }
