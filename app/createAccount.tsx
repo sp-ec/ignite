@@ -8,7 +8,6 @@ import {
   ButtonIcon,
   ButtonGroup,
 } from "@/components/ui/button";
-import { AuthContext } from "@/utils/authContext";
 import { VStack } from "@/components/ui/vstack";
 import { Input, InputField } from "@/components/ui/input";
 
