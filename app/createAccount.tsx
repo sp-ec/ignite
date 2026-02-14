@@ -45,8 +45,9 @@ export default function createAccount() {
     name?: string;
     bio?: string;
     day?: string;
+    dob?: string;
     gender?: string;
-    // TODO: at least 1 images
+    images?: string;
   }>({});
 
 	const router = useRouter();
@@ -130,6 +131,22 @@ export default function createAccount() {
     const dob = new Date(Number(year), Number(month), Number(day));
     if (dob.getDate() !== Number(day)) {
       newErrors.day = "Invalid date of birth day"
+    } else {
+      const today = new Date();
+
+      let age = today.getFullYear() - dob.getFullYear();
+      const diff = today.getMonth() - dob.getMonth();
+
+      if (
+        diff < 0 ||
+        diff === 0 && today.getDate() < dob.getDate()
+        ) {
+          age--;
+        }
+
+      if (age < 18) {
+        newErrors.dob = "You must be at least 18 years old";
+      }
     }
 
     if (!gender) {
@@ -245,7 +262,13 @@ export default function createAccount() {
 
 							if (!result.canceled) {
 								const uris = result.assets.map((asset) => asset.uri);
-								setPhotos(uris);
+
+                if (uris.length > 3) {
+                  alert("You can only select up to 3 photos");
+                  setPhotos(uris.slice(0, 3));
+                } else {
+								  setPhotos(uris);
+                }
 								console.log("Selected URIs:", uris);
 							}
 						} catch (error) {
@@ -366,6 +389,8 @@ export default function createAccount() {
 						</Select>
 					</VStack>
 				</HStack>
+        {errors.dob && <Text className="text-red-500 text-sm mb-2">{errors.dob}</Text>}
+
 				<VStack className="mb-2">
 					<Text className="text-md">Gender</Text>
 					<Select defaultValue="Select Gender" onValueChange={setGender}>
