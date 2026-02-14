@@ -47,7 +47,7 @@ export default function createAccount() {
     day?: string;
     dob?: string;
     gender?: string;
-    images?: string;
+    photos?: string;
   }>({});
 
 	const router = useRouter();
@@ -126,6 +126,10 @@ export default function createAccount() {
 
     if (bio.length > 250) {
       newErrors.bio = "Bio must be less than or equal to 250 characters"
+    }
+
+    if (photos.length < 1) {
+      newErrors.photos = "You must select at least one photo"
     }
 
     const dob = new Date(Number(year), Number(month), Number(day));
@@ -238,61 +242,65 @@ export default function createAccount() {
           </Textarea>
           {errors.bio && <Text className="text-red-500 text-sm">{errors.bio}</Text>}
         </VStack>
+        
+        <VStack className="mb-2">
+          <Text>Profile Photos</Text>
+          <Button
+            className="bg-zinc-200 mb-2"
+            onPress={async () => {
+              // Request permission (Required for iOS)
+              const permissionResult =
+                await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-				<Text>Profile Photos</Text>
-				<Button
-					className="bg-zinc-200 mb-2"
-					onPress={async () => {
-						// Request permission (Required for iOS)
-						const permissionResult =
-							await ImagePicker.requestMediaLibraryPermissionsAsync();
+              if (permissionResult.granted === false) {
+                alert("Permission to access camera roll is required!");
+                return;
+              }
 
-						if (permissionResult.granted === false) {
-							alert("Permission to access camera roll is required!");
-							return;
-						}
+              try {
+                const result = await ImagePicker.launchImageLibraryAsync({
+                  mediaTypes: ["images"], // Use ImagePicker.MediaTypeOptions.Images in older versions
+                  allowsMultipleSelection: true,
+                  selectionLimit: 3,
+                  quality: 1,
+                });
 
-						try {
-							const result = await ImagePicker.launchImageLibraryAsync({
-								mediaTypes: ["images"], // Use ImagePicker.MediaTypeOptions.Images in older versions
-								allowsMultipleSelection: true,
-								selectionLimit: 3,
-								quality: 1,
-							});
+                if (!result.canceled) {
+                  const uris = result.assets.map((asset) => asset.uri);
 
-							if (!result.canceled) {
-								const uris = result.assets.map((asset) => asset.uri);
-
-                if (uris.length > 3) {
-                  alert("You can only select up to 3 photos");
-                  setPhotos(uris.slice(0, 3));
-                } else {
-								  setPhotos(uris);
+                  if (uris.length > 3) {
+                    alert("You can only select up to 3 photos");
+                    setPhotos(uris.slice(0, 3));
+                  } else {
+                    setPhotos(uris);
+                  }
+                  console.log("Selected URIs:", uris);
                 }
-								console.log("Selected URIs:", uris);
-							}
-						} catch (error) {
-							console.log("Picker Error: ", error);
-						}
-					}}
-				>
-					<ButtonText className="text-zinc-900 text-md">
-						Choose Photos
-					</ButtonText>
-				</Button>
-				<HStack space="md" className="mb-2 justify-around">
-					{photos.map((uri, index) => (
-						<Box key={index} className="relative">
-							<Image
-								source={{ uri: uri }}
-								alt={`Profile photo ${index + 1}`}
-								size="md" // gluestack preset for 112px
-								className="rounded-lg"
-							/>
-							{/* Optional: Remove button overlay */}
-						</Box>
-					))}
-				</HStack>
+              } catch (error) {
+                console.log("Picker Error: ", error);
+              }
+            }}
+          >
+            <ButtonText className="text-zinc-900 text-md">
+              Choose Photos
+            </ButtonText>
+          </Button>
+          <HStack space="md" className="justify-around">
+            {photos.map((uri, index) => (
+              <Box key={index} className="relative">
+                <Image
+                  source={{ uri: uri }}
+                  alt={`Profile photo ${index + 1}`}
+                  size="md" // gluestack preset for 112px
+                  className="rounded-lg"
+                />
+                {/* Optional: Remove button overlay */}
+              </Box>
+            ))}
+          </HStack>
+          {errors.photos && <Text className="text-red-500 text-sm">{errors.photos}</Text>}
+        </VStack>
+
 				<HStack className="mb-2">
 					<VStack className="w-20 mr-2">
 						<Text className="text-md">Month</Text>
