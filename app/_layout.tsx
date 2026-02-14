@@ -2,12 +2,27 @@ import { Stack } from "expo-router";
 import { Box } from "@/components/ui/box";
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import "@/global.css";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useFonts } from "expo-font";
 import { Ionicons } from "@expo/vector-icons";
+import * as SplashScreen from "expo-splash-screen";
 
 export default function RootLayout() {
 	const [colorMode, setColorMode] = useState<"light" | "dark">("light");
+
+	const [loaded, error] = useFonts({
+		...Ionicons.font,
+	});
+
+	useEffect(() => {
+		if (loaded || error) {
+			SplashScreen.hideAsync();
+		}
+	}, [loaded, error]);
+
+	if (!loaded && !error) {
+		return null;
+	}
 
 	return (
 		<GluestackUIProvider mode={colorMode}>
