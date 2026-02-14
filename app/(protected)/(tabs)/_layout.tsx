@@ -1,16 +1,27 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { View } from "react-native";
+import { SymbolWeight } from "expo-symbols";
 
 export default function BottomTabsLayout() {
 	return (
 		<Tabs
 			screenOptions={{
 				headerShown: false,
-				tabBarActiveTintColor: "#ff6b6b",
+				tabBarActiveTintColor: "#AD46FF",
+				tabBarInactiveTintColor: "#666",
+				tabBarShowLabel: true, // Cleaner look for bubble styles
 				tabBarStyle: {
 					backgroundColor: "#fff",
-					height: 65,
-					paddingBottom: 10,
+					height: 92,
+					borderTopWidth: 0,
+					elevation: 0,
+					marginBottom: -10,
+				},
+				tabBarLabelStyle: {
+					marginTop: 15,
+					fontSize: 12,
+					fontWeight: "600",
 				},
 			}}
 		>
@@ -18,8 +29,23 @@ export default function BottomTabsLayout() {
 				name="(swipe)"
 				options={{
 					title: "Swipe",
-					tabBarIcon: ({ color, size }) => (
-						<Ionicons name="copy-outline" size={size} color={color} />
+
+					tabBarIcon: ({ color, size, focused }) => (
+						<View
+							style={{
+								backgroundColor: focused ? "#E9D4FF" : "transparent",
+								borderRadius: 20,
+								paddingHorizontal: 35,
+								paddingVertical: 25,
+								marginBottom: -10,
+								marginTop: 34,
+								paddingBlockStart: 10,
+								justifyContent: "center",
+								alignItems: "center",
+							}}
+						>
+							<Ionicons name="heart" size={size} color={color} />
+						</View>
 					),
 				}}
 			/>
@@ -27,12 +53,22 @@ export default function BottomTabsLayout() {
 				name="(chat)"
 				options={{
 					title: "Chat",
-					tabBarIcon: ({ color, size }) => (
-						<Ionicons
-							name="chatbox-ellipses-outline"
-							size={size}
-							color={color}
-						/>
+					tabBarIcon: ({ color, size, focused }) => (
+						<View
+							style={{
+								backgroundColor: focused ? "#E9D4FF" : "transparent",
+								borderRadius: 20,
+								paddingHorizontal: 35,
+								paddingVertical: 25,
+								marginBottom: -10,
+								marginTop: 34,
+								paddingBlockStart: 10,
+								justifyContent: "center",
+								alignItems: "center",
+							}}
+						>
+							<Ionicons name="chatbox-ellipses" size={size} color={color} />
+						</View>
 					),
 				}}
 			/>
@@ -40,8 +76,22 @@ export default function BottomTabsLayout() {
 				name="(profile)"
 				options={{
 					title: "Profile",
-					tabBarIcon: ({ color, size }) => (
-						<Ionicons name="person-circle-outline" size={size} color={color} />
+					tabBarIcon: ({ color, size, focused }) => (
+						<View
+							style={{
+								backgroundColor: focused ? "#E9D4FF" : "transparent",
+								borderRadius: 20,
+								paddingHorizontal: 35,
+								paddingVertical: 25,
+								marginBottom: -10,
+								marginTop: 34,
+								paddingBlockStart: 10,
+								justifyContent: "center",
+								alignItems: "center",
+							}}
+						>
+							<Ionicons name="person-circle" size={size} color={color} />
+						</View>
 					),
 				}}
 			/>
