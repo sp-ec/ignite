@@ -1,10 +1,15 @@
 import { db, storage } from "@/FirebaseConfig";
 import { useTheme } from "@/ThemeContext";
+import {
+	Alert,
+	AlertIcon,
+	AlertText,
+} from "@/components/ui/alert";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { HStack } from "@/components/ui/hstack";
-import { ChevronDownIcon } from "@/components/ui/icon";
+import { ChevronDownIcon, InfoIcon } from "@/components/ui/icon";
 import { Image } from "@/components/ui/image";
 import { Input, InputField } from "@/components/ui/input";
 import {
@@ -49,6 +54,7 @@ const capitalize = (str: string) => {
 };
 
 export default function IndexScreen() {
+	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const [isEditing, setIsEditing] = useState(false);
 	const [name, setName] = useState("");
 	const [photos, setPhotos] = useState<string[]>([]);
@@ -70,6 +76,7 @@ export default function IndexScreen() {
 				router.replace("/login");
 			} else {
 				try {
+					setErrorMessage(null);
 					const q = query(usersCollection, where("uid", "==", currentUser.uid));
 					const qSnapshot = await getDocs(q);
 
@@ -132,6 +139,7 @@ export default function IndexScreen() {
 		if (!user) return;
 
 		try {
+			setErrorMessage(null);
 			const photoUrls = await uploadPhotos(user.uid, photos);
 
 			const userDocRef = doc(db, "users", user.uid);
@@ -149,7 +157,8 @@ export default function IndexScreen() {
 
 			setIsEditing(false);
 		} catch (error) {
-			alert("Error saving profile: " + error);
+			//alert("Error saving profile: " + error);
+			setErrorMessage("Error saving profile: Try again or wait 5 minutes.");
 		}
 	};
 
@@ -222,6 +231,16 @@ export default function IndexScreen() {
 									onChangeText={setName}
 								/>
 							</Input>
+							{errorMessage && (
+								<Alert
+									action="muted"
+									variant="outline"
+									className="w-64 mb-6"
+								>
+									<AlertIcon as={InfoIcon} />
+									<AlertText>{errorMessage}</AlertText>
+								</Alert>
+							)}
 							<Text className="text-lg mb-2 dark:text-zinc-200">
 								Your Photos
 							</Text>
@@ -233,7 +252,8 @@ export default function IndexScreen() {
 										await ImagePicker.requestMediaLibraryPermissionsAsync();
 
 									if (permissionResult.granted === false) {
-										alert("Permission to access camera roll is required!");
+										//alert("Permission to access camera roll is required!");
+										setErrorMessage("Permission to access camera roll is required!");
 										return;
 									}
 
