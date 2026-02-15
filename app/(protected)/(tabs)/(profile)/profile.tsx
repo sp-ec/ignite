@@ -1,5 +1,4 @@
 import { db } from "@/FirebaseConfig";
-import DateSelector from "@/components/custom/date-selector";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { HStack } from "@/components/ui/hstack";
@@ -23,9 +22,10 @@ import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, doc, getDocs, query, setDoc, where } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Text } from "react-native";
+import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const onDateChange = (date: { month: string; day: string; year: string }) => {
@@ -46,6 +46,7 @@ export default function IndexScreen() {
 	const [bio, setBio] = useState("");
 	const [dob, setDob] = useState({ month: "Jan", day: "1", year: "2000" });
 	const [loading, setLoading] = useState(true);
+	const [age, setAge] = useState("");
 
 	const router = useRouter();
 
@@ -91,6 +92,20 @@ export default function IndexScreen() {
 							day: dateObj.getDate().toString(),
 							year: dateObj.getFullYear().toString(),
 						});
+
+						const today = new Date();
+
+						let age = today.getFullYear() - dateObj.getFullYear();
+						const diff = today.getMonth() - dateObj.getMonth();
+
+						if (
+							diff < 0 ||
+							diff === 0 && today.getDate() < dateObj.getDate()
+							) {
+								age--;
+							}
+
+						setAge(age.toString());
 					}
 				} catch (error) {
 					console.log("Error fetching user data: ", error);
@@ -102,6 +117,29 @@ export default function IndexScreen() {
 
 		return unsubscribe;
 	}, []);
+
+	const updateDB = async () => {
+		if (!user) return;
+
+		try {
+			const userDocRef = doc(db, 'users', user.uid);
+
+			await setDoc(
+				userDocRef,
+				{
+					name,
+					bio,
+					gender,
+					photos
+				},
+				{ merge: true }
+			);
+
+			setIsEditing(false);
+		} catch (error) {
+			alert("Error saving profile: " + error);
+		}
+	};
 
 	if (loading) {
 		return (
@@ -120,113 +158,114 @@ export default function IndexScreen() {
 					flex: 1,
 				}}
 			>
-				<VStack className="p-8">
-					<Input className="mb-4 w-64">
-						<InputField
-							placeholder="Name"
-							className="text-2xl"
-							value={name}
-							onChangeText={setName}
-						/>
-					</Input>
-					<Text className="text-lg mb-2">Your Photos</Text>
-					<Button
-						className="bg-zinc-200 mb-4"
-						onPress={async () => {
-							// Request permission (Required for iOS)
-							const permissionResult =
-								await ImagePicker.requestMediaLibraryPermissionsAsync();
+				<ScrollView>
+					<VStack className="p-8">
+						<Input className="mb-4 w-64">
+							<InputField
+								placeholder="Name"
+								className="text-2xl"
+								value={name}
+								onChangeText={setName}
+							/>
+						</Input>
+						<Text className="text-lg mb-2">Your Photos</Text>
+						<Button
+							className="bg-zinc-200 mb-4"
+							onPress={async () => {
+								// Request permission (Required for iOS)
+								const permissionResult =
+									await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-							if (permissionResult.granted === false) {
-								alert("Permission to access camera roll is required!");
-								return;
-							}
-
-							try {
-								const result = await ImagePicker.launchImageLibraryAsync({
-									mediaTypes: ["images"], // Use ImagePicker.MediaTypeOptions.Images in older versions
-									allowsMultipleSelection: true,
-									selectionLimit: 3,
-									quality: 1,
-								});
-
-								if (!result.canceled) {
-									const uris = result.assets.map((asset) => asset.uri);
-									setPhotos(uris);
-									console.log("Selected URIs:", uris);
+								if (permissionResult.granted === false) {
+									alert("Permission to access camera roll is required!");
+									return;
 								}
-							} catch (error) {
-								console.log("Picker Error: ", error);
-							}
-						}}
-					>
-						<ButtonText className="text-zinc-900 text-md">
-							Choose Photos
-						</ButtonText>
-					</Button>
-					<HStack space="md" className="mb-2 justify-around">
-						{photos.map((uri, index) => (
-							<Box key={index} className="relative">
-								<Image
-									source={{ uri: uri }}
-									alt={`Profile photo ${index + 1}`}
-									className="rounded-lg w-28 h-48"
-								/>
-							</Box>
-						))}
-					</HStack>
-					<DateSelector onDateChange={(newDate) => setDob(newDate)} />
-					<VStack>
-						<Text className="text-md">Gender</Text>
-						<Select
-							selectedValue={capitalize(gender)}
-							onValueChange={setGender}
+
+								try {
+									const result = await ImagePicker.launchImageLibraryAsync({
+										mediaTypes: ["images"], // Use ImagePicker.MediaTypeOptions.Images in older versions
+										allowsMultipleSelection: true,
+										selectionLimit: 3,
+										quality: 1,
+									});
+
+									if (!result.canceled) {
+										const uris = result.assets.map((asset) => asset.uri);
+										setPhotos(uris);
+										console.log("Selected URIs:", uris);
+									}
+								} catch (error) {
+									console.log("Picker Error: ", error);
+								}
+							}}
 						>
-							<SelectTrigger>
-								<SelectInput placeholder="Select Gender" />
-								<SelectIcon as={ChevronDownIcon} />
-							</SelectTrigger>
-							<SelectPortal>
-								<SelectBackdrop />
-								<SelectContent className="text-zinc-900">
-									<SelectDragIndicatorWrapper>
-										<SelectDragIndicator />
-									</SelectDragIndicatorWrapper>
-									<SelectItem label="Man" value="man" />
-									<SelectItem label="Woman" value="woman" />
-									<SelectItem label="Non-Binary" value="non-binary" />
-									<SelectItem label="Other" value="other" />
-								</SelectContent>
-							</SelectPortal>
-						</Select>
+							<ButtonText className="text-zinc-900 text-md">
+								Choose Photos
+							</ButtonText>
+						</Button>
+						<HStack space="md" className="mb-2 justify-around">
+							{photos.map((uri, index) => (
+								<Box key={index} className="relative">
+									<Image
+										source={{ uri: uri }}
+										alt={`Profile photo ${index + 1}`}
+										className="rounded-lg w-28 h-48"
+									/>
+								</Box>
+							))}
+						</HStack>
+						<VStack>
+							<Text className="text-md">Gender</Text>
+							<Select
+								selectedValue={capitalize(gender)}
+								onValueChange={setGender}
+							>
+								<SelectTrigger>
+									<SelectInput placeholder="Select Gender" />
+									<SelectIcon as={ChevronDownIcon} />
+								</SelectTrigger>
+								<SelectPortal>
+									<SelectBackdrop />
+									<SelectContent className="text-zinc-900">
+										<SelectDragIndicatorWrapper>
+											<SelectDragIndicator />
+										</SelectDragIndicatorWrapper>
+										<SelectItem label="Man" value="man" />
+										<SelectItem label="Woman" value="woman" />
+										<SelectItem label="Non-Binary" value="non-binary" />
+										<SelectItem label="Other" value="other" />
+									</SelectContent>
+								</SelectPortal>
+							</Select>
+						</VStack>
+						<Text className="text-lg">Bio</Text>
+						<Input className="h-32 pt-2 mb-4" size="md">
+							<InputField
+								multiline={true}
+								placeholder="Write something about yourself..."
+								value={bio}
+								onChangeText={setBio}
+								textAlignVertical="top" // Keeps text at top of box
+							/>
+						</Input>
+						<Button
+							className="bg-purple-500"
+							onPress={() => {
+								// Handle save action here
+								setIsEditing(false);
+								setName(name);
+								setBio(bio);
+								setGender(gender);
+								setDob(dob);
+								setPhotos(photos);
+							}}
+						>
+							<ButtonText className="text-zinc-200 text-md" onPress={updateDB}>
+								Save Profile
+							</ButtonText>
+						</Button>
 					</VStack>
-					<Text className="text-lg">Bio</Text>
-					<Input className="h-32 pt-2 mb-4" size="md">
-						<InputField
-							multiline={true}
-							placeholder="Write something about yourself..."
-							value={bio}
-							onChangeText={setBio}
-							textAlignVertical="top" // Keeps text at top of box
-						/>
-					</Input>
-					<Button
-						className="bg-purple-500"
-						onPress={() => {
-							// Handle save action here
-							setIsEditing(false);
-							setName(name);
-							setBio(bio);
-							setGender(gender);
-							setDob(dob);
-							setPhotos(photos);
-						}}
-					>
-						<ButtonText className="text-zinc-200 text-md">
-							Save Profile
-						</ButtonText>
-					</Button>
-				</VStack>
+				</ScrollView>
 			</SafeAreaView>
 		);
 	}
@@ -238,7 +277,7 @@ export default function IndexScreen() {
 		>
 			<VStack className="p-8">
 				<HStack className="justify-between">
-					<Text className="text-2xl mb-4 w-64">{name}</Text>
+					<Text className="text-2xl mb-4 w-64">{name + ", " + age}</Text>
 					<Button
 						className="bg-zinc-200 w-12 h-12 p-0 rounded-lg"
 						onPress={() =>
@@ -263,12 +302,6 @@ export default function IndexScreen() {
 						</Box>
 					))}
 				</HStack>
-				<VStack className="mb-4">
-					<Text className="text-md mb-2">Birthdate</Text>
-					<Text className="text-md">
-						{capitalize(dob.month)} {dob.day}, {dob.year}
-					</Text>
-				</VStack>
 				<VStack className="mb-4">
 					<Text className="text-md mb-2">Gender</Text>
 					<Text className="text-md">{capitalize(gender)}</Text>
