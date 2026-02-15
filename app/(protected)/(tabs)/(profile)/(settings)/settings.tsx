@@ -13,8 +13,8 @@ import { Ionicons } from "@expo/vector-icons";
 import MultiSlider from "@ptomasroos/react-native-multi-slider";
 import { useRouter } from "expo-router";
 import { getAuth } from "firebase/auth";
-import { doc, updateDoc } from "firebase/firestore";
-import { useState } from "react";
+import { collection, doc, getDocs, query, updateDoc, where } from "firebase/firestore";
+import { useEffect, useState } from "react";
 import { Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "@/ThemeContext";
@@ -27,12 +27,38 @@ export default function SettingsScreen() {
 	const router = useRouter();
 
 	const user = getAuth().currentUser;
+	const usersCollection = collection(db, "users");
+
 
 	getAuth().onAuthStateChanged((user) => {
 		if (!user) {
 			router.replace("/");
 		}
 	});
+
+	useEffect(() => {
+		const fetchPreferences = async () => {
+		  const currentUser = getAuth().currentUser;
+		  if (!currentUser) return;
+	  
+		  try {
+			const q = query(usersCollection, where("uid", "==", currentUser.uid))
+			const qSnapshot = await getDocs(q);
+	  
+			if (!qSnapshot.empty) {
+				const data = qSnapshot.docs[0].data();
+	  		
+			  	setAgeRange(data.ageRange);
+				setGenderPref(data.genderPreference);
+			}
+		  } catch (error) {
+			console.log("Error fetching preferences: ", error);
+		  }
+		};
+	  
+		fetchPreferences();
+	  }, []);
+	  
 
 	const updateGenderPref = (gender: string) => {
 		setGenderPref((prev) =>
@@ -51,6 +77,7 @@ export default function SettingsScreen() {
 				ageRange,
 				genderPreference: genderPref,
 			});
+			alert("Preferences Saved");
 		} catch (error) {
 			alert("Failed to save preferences");
 		}
