@@ -28,7 +28,6 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-
 const onDateChange = (date: { month: string; day: string; year: string }) => {
 	console.log("Selected date:", date);
 	// You can also update state here if you want to keep the selected date in this component
@@ -51,66 +50,49 @@ export default function IndexScreen() {
 	const router = useRouter();
 
 	const user = getAuth().currentUser;
-	const usersCollection = collection(db, 'users');
+	const usersCollection = collection(db, "users");
 
 	useEffect(() => {
 		const auth = getAuth();
-		const unsubscribe = onAuthStateChanged(auth, (user) => {
-		  if (!user) {
-			router.replace("/login");
-		  } else {
-			//setLoading(false);
-		  }
-		});
-	
-		return unsubscribe;
-	  }, []);
-
-	useEffect(() => {
-		const getUserData = async () => {
-			/*
-			if (!user) {
-				router.replace("/");
-				return;
-			}
-			*/
-
-			try {
-				if (user) {
-					const q = query(usersCollection, where("uid", "==", user.uid));
+		// Listen for auth state changes
+		const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+			if (!currentUser) {
+				// No user found, redirect immediately
+				router.replace("/login");
+			} else {
+				// User is authenticated, now fetch their data
+				try {
+					const q = query(usersCollection, where("uid", "==", currentUser.uid));
 					const qSnapshot = await getDocs(q);
-				
 
 					if (!qSnapshot.empty) {
 						const userData = qSnapshot.docs[0].data();
-
-						setName(userData.name);
-						setBio(userData.bio);
-						setGender(userData.gender);
-						setPhotos(userData.photos);
+						setName(userData.name || "");
+						setBio(userData.bio || "");
+						setGender(userData.gender || "");
+						setPhotos(userData.photos || []);
+						if (userData.dob) setDob(userData.dob);
 					}
+				} catch (error) {
+					console.log("Error fetching user data: ", error);
+				} finally {
+					// Only stop loading after the fetch attempt is complete
+					setLoading(false);
 				}
-			} catch (error) {
-				console.log("Error fetching user data: ", error);
-			} finally {
-				setLoading(false);
 			}
-		}
+		});
 
-		getUserData();
-	}, [user]);
+		return unsubscribe;
+	}, []);
 
-	const fetchUserData = async () => {
-		
-
-	};
-	
 	if (loading) {
-	return (
-		<SafeAreaView style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-		<ActivityIndicator size="large" />
-		</SafeAreaView>
-	);
+		return (
+			<SafeAreaView
+				style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+			>
+				<ActivityIndicator size="large" />
+			</SafeAreaView>
+		);
 	}
 
 	if (isEditing) {
