@@ -1,12 +1,13 @@
 import { db } from "@/FirebaseConfig";
+import { useTheme } from "@/ThemeContext";
 import { Card } from "@/components/ui/card";
 import { HStack } from "@/components/ui/hstack";
 import { Image } from "@/components/ui/image";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import { getAuth } from "firebase/auth";
-import { ActivityIndicator, View } from "react-native";
 import {
 	Timestamp,
 	collection,
@@ -18,7 +19,7 @@ import {
 	where,
 } from "firebase/firestore";
 import { useEffect, useState } from "react";
-import { Dimensions, ScrollView } from "react-native";
+import { ActivityIndicator, Dimensions, ScrollView, View } from "react-native";
 import {
 	Gesture,
 	GestureDetector,
@@ -35,8 +36,6 @@ import Animated, {
 	withSpring,
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useTheme } from "@/ThemeContext";
-import { router } from "expo-router";
 
 const capitalize = (str: string) => {
 	if (!str) return str;
@@ -133,7 +132,7 @@ export default function IndexScreen() {
 				setProfiles(users);
 			} catch (error) {
 				console.log("Error fetching profiles: ", error);
-				alert("Failed to load profiles");
+				//alert("Failed to load profiles");
 			} finally {
 				setLoading(false);
 			}
