@@ -13,9 +13,16 @@ import { Ionicons } from "@expo/vector-icons";
 import MultiSlider from "@ptomasroos/react-native-multi-slider";
 import { useRouter } from "expo-router";
 import { getAuth } from "firebase/auth";
-import { collection, doc, getDocs, query, updateDoc, where } from "firebase/firestore";
+import {
+	collection,
+	doc,
+	getDocs,
+	query,
+	updateDoc,
+	where,
+} from "firebase/firestore";
 import { useEffect, useState } from "react";
-import { Text } from "react-native";
+import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "@/ThemeContext";
 
@@ -29,6 +36,10 @@ export default function SettingsScreen() {
 	const user = getAuth().currentUser;
 	const usersCollection = collection(db, "users");
 
+	const isDark = colorMode === "dark";
+
+	// Theme Colors
+	const bgColor = isDark ? "#18181B" : "#F5F5F5";
 
 	getAuth().onAuthStateChanged((user) => {
 		if (!user) {
@@ -38,27 +49,26 @@ export default function SettingsScreen() {
 
 	useEffect(() => {
 		const fetchPreferences = async () => {
-		  const currentUser = getAuth().currentUser;
-		  if (!currentUser) return;
-	  
-		  try {
-			const q = query(usersCollection, where("uid", "==", currentUser.uid))
-			const qSnapshot = await getDocs(q);
-	  
-			if (!qSnapshot.empty) {
-				const data = qSnapshot.docs[0].data();
-	  		
-			  	setAgeRange(data.ageRange);
-				setGenderPref(data.genderPreference);
+			const currentUser = getAuth().currentUser;
+			if (!currentUser) return;
+
+			try {
+				const q = query(usersCollection, where("uid", "==", currentUser.uid));
+				const qSnapshot = await getDocs(q);
+
+				if (!qSnapshot.empty) {
+					const data = qSnapshot.docs[0].data();
+
+					setAgeRange(data.ageRange);
+					setGenderPref(data.genderPreference);
+				}
+			} catch (error) {
+				console.log("Error fetching preferences: ", error);
 			}
-		  } catch (error) {
-			console.log("Error fetching preferences: ", error);
-		  }
 		};
-	  
+
 		fetchPreferences();
-	  }, []);
-	  
+	}, []);
 
 	const updateGenderPref = (gender: string) => {
 		setGenderPref((prev) =>
@@ -84,88 +94,104 @@ export default function SettingsScreen() {
 	};
 
 	return (
-		<SafeAreaView
+		<View
 			style={{
 				flex: 1,
+				backgroundColor: bgColor,
 			}}
 		>
-			<VStack className="p-8">
-				<HStack className="justify-start items-center mb-4">
+			<SafeAreaView
+				style={{
+					flex: 1,
+				}}
+			>
+				<VStack className="p-8">
+					<HStack className="justify-start items-center mb-4">
+						<Button
+							className="text-md bg-zinc-700 dark:bg-zinc-200 mb-2 w-12 h-12 p-0 rounded-lg"
+							onPress={() => {
+								router.navigate("/profile");
+							}}
+						>
+							<ButtonText className="text-md">
+								<Ionicons name="arrow-back-outline" size={24} color={bgColor} />
+							</ButtonText>
+						</Button>
+						<Text className="text-2xl ml-6 mb-2 dark:text-zinc-200">
+							Settings
+						</Text>
+					</HStack>
+					<Text className="text-xl mb-4 dark:text-zinc-200">General</Text>
 					<Button
-						className="text-md bg-zinc-200 mb-2 w-12 h-12 p-0 rounded-lg"
-						onPress={() => {
-							router.navigate("/profile");
-						}}
+						onPress={toggleColorMode}
+						className="mb-4 bg-zinc-700 dark:bg-zinc-200"
 					>
-						<ButtonText className="text-zinc-900 text-md">
-							<Ionicons name="arrow-back-outline" size={24} color={"#000"} />
+						<ButtonText>
+							Switch to {colorMode === "light" ? "dark" : "light"} mode
 						</ButtonText>
 					</Button>
-					<Text className="text-2xl ml-6 mb-2">Settings</Text>
-				</HStack>
-				<Text className="text-xl mb-4">General</Text>
-				<Button onPress={toggleColorMode} className="mb-4">
-					<ButtonText>
-						Switch to {colorMode === "light" ? "dark" : "light"} mode
-					</ButtonText>
-				</Button>
-				<Text className="text-xl mb-4">Match Preferences</Text>
-				<Text className="text-md mb-4">
-					Age Range: {ageRange[0]} - {ageRange[1]}
-				</Text>
-				<MultiSlider
-					values={ageRange}
-					onValuesChange={(values) => setAgeRange(values as [number, number])}
-					min={18}
-					max={100}
-					step={1}
-					sliderLength={280}
-					selectedStyle={{ backgroundColor: "#9333EA" }}
-					unselectedStyle={{ backgroundColor: "#E5E7EB" }}
-					markerStyle={{
-						backgroundColor: "#9333EA",
-						height: 24,
-						width: 24,
-						borderRadius: 12,
-						borderWidth: 0,
-					}}
-					pressedMarkerStyle={{
-						height: 28,
-						width: 28,
-						borderRadius: 14,
-						backgroundColor: "#9333EA",
-						borderWidth: 0,
-					}}
-					containerStyle={{ height: 40 }}
-				/>
+					<Text className="text-xl mb-4 dark:text-zinc-200">
+						Match Preferences
+					</Text>
+					<Text className="text-md mb-4 dark:text-zinc-200">
+						Age Range: {ageRange[0]} - {ageRange[1]}
+					</Text>
+					<MultiSlider
+						values={ageRange}
+						onValuesChange={(values) => setAgeRange(values as [number, number])}
+						min={18}
+						max={100}
+						step={1}
+						sliderLength={280}
+						selectedStyle={{ backgroundColor: "#9333EA" }}
+						unselectedStyle={{ backgroundColor: "#E5E7EB" }}
+						markerStyle={{
+							backgroundColor: "#9333EA",
+							height: 24,
+							width: 24,
+							borderRadius: 12,
+							borderWidth: 0,
+						}}
+						pressedMarkerStyle={{
+							height: 28,
+							width: 28,
+							borderRadius: 14,
+							backgroundColor: "#9333EA",
+							borderWidth: 0,
+						}}
+						containerStyle={{ height: 40 }}
+					/>
 
-				<Text className="text-md mb-4">Gender Preferences</Text>
-				{["men", "women", "non-binary", "other"].map((gender) => (
-					<Checkbox
-						key={gender}
-						isChecked={genderPref.includes(gender)}
-						onChange={() => updateGenderPref(gender)}
-						size="md"
-						className="mb-2"
-						value={gender}
-					>
-						<CheckboxIndicator>
-							<CheckboxIcon as={CheckIcon} />
-						</CheckboxIndicator>
-						<CheckboxLabel>
-							{gender.charAt(0).toUpperCase() + gender.slice(1)}
-						</CheckboxLabel>
-					</Checkbox>
-				))}
-				<Button className="bg-purple-500 mt-4 mb-4" onPress={updateDB}>
-					<ButtonText className="text-zinc-200 text-md" onPress={updateDB}>
-						Save Preferences
-					</ButtonText>
-				</Button>
-				<Button className="bg-rose-500 mb-2 " onPress={() => auth.signOut()}>
-					<ButtonText className="text-zinc-200 text-md">Log Out</ButtonText>
-				</Button>
-			</VStack>
-		</SafeAreaView>
+					<Text className="text-lg mb-4 dark:text-zinc-200">
+						Gender Preferences
+					</Text>
+					{["men", "women", "non-binary", "other"].map((gender) => (
+						<Checkbox
+							key={gender}
+							isChecked={genderPref.includes(gender)}
+							onChange={() => updateGenderPref(gender)}
+							size="md"
+							className="mb-2"
+							value={gender}
+						>
+							<CheckboxIndicator>
+								<CheckboxIcon as={CheckIcon} />
+							</CheckboxIndicator>
+							<CheckboxLabel>
+								{gender.charAt(0).toUpperCase() + gender.slice(1)}
+							</CheckboxLabel>
+						</Checkbox>
+					))}
+					<Button className="bg-purple-500 mt-4 mb-4" onPress={updateDB}>
+						<ButtonText className="text-zinc-200 text-md" onPress={updateDB}>
+							Save Preferences
+						</ButtonText>
+					</Button>
+					<Button className="bg-rose-500 mb-2 " onPress={() => auth.signOut()}>
+						<ButtonText className="text-zinc-200 text-md">Log Out</ButtonText>
+					</Button>
+				</VStack>
+			</SafeAreaView>
+		</View>
 	);
 }

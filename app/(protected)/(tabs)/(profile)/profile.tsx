@@ -36,6 +36,7 @@ import { ActivityIndicator, Text } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "@/ThemeContext";
+import { Card } from "@/components/ui/card";
 
 const onDateChange = (date: { month: string; day: string; year: string }) => {
 	console.log("Selected date:", date);
@@ -158,11 +159,20 @@ export default function IndexScreen() {
 
 	if (loading) {
 		return (
-			<SafeAreaView
-				style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+			<View
+				style={{
+					flex: 1,
+					backgroundColor: bgColor,
+					justifyContent: "center",
+					alignItems: "center",
+				}}
 			>
-				<ActivityIndicator size="large" color="AD46FF" />
-			</SafeAreaView>
+				<SafeAreaView
+					style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+				>
+					<ActivityIndicator size="large" color="AD46FF" />
+				</SafeAreaView>
+			</View>
 		);
 	}
 
@@ -341,14 +351,19 @@ export default function IndexScreen() {
 							</Box>
 						))}
 					</HStack>
-					<VStack className="mb-4">
-						<Text className="text-lg mb-2 dark:text-zinc-200">Gender</Text>
-						<Text className="text-md dark:text-zinc-200">
-							{capitalize(gender)}
-						</Text>
-					</VStack>
-					<Text className="text-lg dark:text-zinc-200 mb-2">Bio</Text>
-					<Text className="text-md mb-8 dark:text-zinc-200">{bio} </Text>
+					<Card className="mb-4">
+						<VStack>
+							<Text className="text-lg mb-2 dark:text-zinc-200">Gender</Text>
+							<Text className="text-md dark:text-zinc-200">
+								{capitalize(gender)}
+							</Text>
+						</VStack>
+					</Card>
+
+					<Card className="mb-16">
+						<Text className="text-lg dark:text-zinc-200 mb-2">Bio</Text>
+						<Text className="text-md mb-8 dark:text-zinc-200">{bio} </Text>
+					</Card>
 					<Button
 						className="bg-zinc-700 dark:bg-zinc-300 mb-4"
 						onPress={() => {
