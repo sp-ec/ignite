@@ -2,15 +2,34 @@ import { Button, ButtonText } from "@/components/ui/button";
 import { Input, InputField } from "@/components/ui/input";
 import { VStack } from "@/components/ui/vstack";
 import { router, useRouter } from "expo-router";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { useState } from "react";
-import { View } from "react-native";
+import {
+	getAuth,
+	onAuthStateChanged,
+	signInWithEmailAndPassword,
+} from "firebase/auth";
+import { useState, useEffect } from "react";
+import { ActivityIndicator, SafeAreaView, View } from "react-native";
 import { auth } from "../FirebaseConfig";
 
 export default function Login() {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
+	const [loading, setLoading] = useState(true);
 	const router = useRouter();
+
+	useEffect(() => {
+		const auth = getAuth();
+		// Listen for auth state changes
+		const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+			if (currentUser) {
+				// user found, immediately bring them to swipe
+				router.replace("/swipe");
+			}
+			setLoading(false);
+		});
+
+		return unsubscribe;
+	}, []);
 
 	const signIn = async () => {
 		try {
@@ -23,6 +42,16 @@ export default function Login() {
 			alert("Sign in failed: " + error.message);
 		}
 	};
+
+	if (loading) {
+		return (
+			<SafeAreaView
+				style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+			>
+				<ActivityIndicator size="large" color="#AD46FF" />
+			</SafeAreaView>
+		);
+	}
 
 	return (
 		<View
