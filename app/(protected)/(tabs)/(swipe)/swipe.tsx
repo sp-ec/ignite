@@ -32,6 +32,8 @@ const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.25;
 
 export default function IndexScreen() {
 	const [gender, setGender] = useState("woman");
+	const [isRejecting, setIsRejecting] = useState(false);
+	const [isAccepting, setIsAccepting] = useState(false);
 
 	const translateX = useSharedValue(0);
 
@@ -39,12 +41,22 @@ export default function IndexScreen() {
 		.activeOffsetX([-10, 10])
 		.onUpdate((event) => {
 			translateX.value = event.translationX;
+			if (event.translationX > SWIPE_THRESHOLD) {
+				setIsAccepting(true);
+				setIsRejecting(false);
+			} else if (event.translationX < -SWIPE_THRESHOLD) {
+				setIsRejecting(true);
+				setIsAccepting(false);
+			} else {
+				setIsAccepting(false);
+				setIsRejecting(false);
+			}
 		})
 		.onEnd(() => {
 			if (Math.abs(translateX.value) > SWIPE_THRESHOLD) {
 				const direction = translateX.value > 0 ? "right" : "left";
 				translateX.value = withSpring(
-					direction === "right" ? SCREEN_WIDTH : -SCREEN_WIDTH,
+					direction === "right" ? SCREEN_WIDTH * 1.2 : -SCREEN_WIDTH * 1.2,
 					{},
 					() => {
 						// Reset position after swipe animation completes
