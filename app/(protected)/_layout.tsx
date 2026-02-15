@@ -1,24 +1,13 @@
-import { auth } from "@/FirebaseConfig";
-import { AuthContext } from "@/utils/authContext";
-import { Redirect, Stack } from "expo-router";
-import { useContext } from "react";
-
-const isLoggedIn = false;
+import { Stack } from "expo-router";
 
 export default function ProtectedLayout() {
-  const authState = useContext(AuthContext);
-
-  if (!isLoggedIn) {
-    return <Redirect href="/login" />;
-  }
-
-  return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-      }}
-    >
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-    </Stack>
-  );
+	return (
+		<Stack
+			screenOptions={{
+				headerShown: false,
+			}}
+		>
+			<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+		</Stack>
+	);
 }
