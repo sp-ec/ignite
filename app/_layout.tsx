@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { useFonts } from "expo-font";
 import { Ionicons } from "@expo/vector-icons";
 import * as SplashScreen from "expo-splash-screen";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export default function RootLayout() {
 	const [colorMode, setColorMode] = useState<"light" | "dark">("light");
@@ -26,16 +27,18 @@ export default function RootLayout() {
 
 	return (
 		<GluestackUIProvider mode={colorMode}>
-			<Box className="flex-1 bg-zinc-100 dark:bg-zinc-900">
-				<Stack
-					screenOptions={{
-						headerShown: false,
-					}}
-				>
-					<Stack.Screen name="login" options={{ headerShown: false }} />
-					<Stack.Screen name="(protected)" options={{ headerShown: false }} />
-				</Stack>
-			</Box>
+			<GestureHandlerRootView>
+				<Box className="flex-1 bg-zinc-100 dark:bg-zinc-900">
+					<Stack
+						screenOptions={{
+							headerShown: false,
+						}}
+					>
+						<Stack.Screen name="login" options={{ headerShown: false }} />
+						<Stack.Screen name="(protected)" options={{ headerShown: false }} />
+					</Stack>
+				</Box>
+			</GestureHandlerRootView>
 		</GluestackUIProvider>
 	);
 }
