@@ -62,17 +62,17 @@ export default function IndexScreen() {
 			
 
 			try {
-				const q = query(usersCollection, where("userID", "==", user.uid));
+				const q = query(usersCollection, where("uid", "==", user.uid));
 				const qSnapshot = await getDocs(q);
 
 				if (!qSnapshot.empty) {
+					console.log("HERE");
 					const userData = qSnapshot.docs[0].data();
 
 					setName(userData.name);
 					setBio(userData.bio);
 					setGender(userData.gender);
 					setPhotos(userData.photos);
-					console.log(name);
 				}
 			} catch (error) {
 				console.log("Error fetching user data: ", error);
