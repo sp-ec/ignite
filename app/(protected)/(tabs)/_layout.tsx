@@ -1,17 +1,27 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { View } from "react-native";
+import { useTheme } from "@/ThemeContext";
 
 export default function BottomTabsLayout() {
+	const { colorMode } = useTheme();
+	const isDark = colorMode === "dark";
+
+	// Theme Colors
+	const bgColor = isDark ? "#09090B" : "#ffffff";
+	const inactiveColor = isDark ? "#888888" : "#666666";
+	const activeColor = "#AD46FF";
+	const bubbleColor = isDark ? "#E9D4FF" : "#E9D4FF"; // Dark purple for dark mode
+
 	return (
 		<Tabs
 			screenOptions={{
 				headerShown: false,
-				tabBarActiveTintColor: "#AD46FF",
-				tabBarInactiveTintColor: "#666",
+				tabBarActiveTintColor: activeColor,
+				tabBarInactiveTintColor: inactiveColor,
 				tabBarShowLabel: true, // Cleaner look for bubble styles
 				tabBarStyle: {
-					backgroundColor: "#fff",
+					backgroundColor: bgColor,
 					height: 85,
 					borderTopWidth: 0,
 					elevation: 0,
@@ -32,7 +42,7 @@ export default function BottomTabsLayout() {
 					tabBarIcon: ({ color, size, focused }) => (
 						<View
 							style={{
-								backgroundColor: focused ? "#E9D4FF" : "transparent",
+								backgroundColor: focused ? bubbleColor : "transparent",
 								borderRadius: 20,
 								width: 70,
 								paddingHorizontal: 0,

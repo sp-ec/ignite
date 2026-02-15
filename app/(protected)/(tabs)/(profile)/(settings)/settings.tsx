@@ -17,10 +17,12 @@ import { doc, updateDoc } from "firebase/firestore";
 import { useState } from "react";
 import { Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTheme } from "@/ThemeContext";
 
 export default function SettingsScreen() {
 	const [ageRange, setAgeRange] = useState<[number, number]>([18, 60]);
 	const [genderPref, setGenderPref] = useState<string[]>([]);
+	const { toggleColorMode, colorMode } = useTheme();
 
 	const router = useRouter();
 
@@ -28,31 +30,31 @@ export default function SettingsScreen() {
 
 	getAuth().onAuthStateChanged((user) => {
 		if (!user) {
-			router.replace('/');
+			router.replace("/");
 		}
 	});
 
 	const updateGenderPref = (gender: string) => {
-		setGenderPref((prev) => 
+		setGenderPref((prev) =>
 			prev.includes(gender)
 				? prev.filter((g) => g !== gender)
-				: [...prev, gender]
-		)
-	}
+				: [...prev, gender],
+		);
+	};
 
 	const updateDB = async () => {
 		if (!user) return;
 
-		const userRef = doc(db, 'users', user.uid);
+		const userRef = doc(db, "users", user.uid);
 		try {
 			await updateDoc(userRef, {
 				ageRange,
 				genderPreference: genderPref,
 			});
 		} catch (error) {
-			alert("Failed to save preferences")
-		}	
-	}
+			alert("Failed to save preferences");
+		}
+	};
 
 	return (
 		<SafeAreaView
@@ -74,6 +76,12 @@ export default function SettingsScreen() {
 					</Button>
 					<Text className="text-2xl ml-6 mb-2">Settings</Text>
 				</HStack>
+				<Text className="text-xl mb-4">General</Text>
+				<Button onPress={toggleColorMode} className="mb-4">
+					<ButtonText>
+						Switch to {colorMode === "light" ? "dark" : "light"} mode
+					</ButtonText>
+				</Button>
 				<Text className="text-xl mb-4">Match Preferences</Text>
 				<Text className="text-md mb-4">
 					Age Range: {ageRange[0]} - {ageRange[1]}
@@ -84,11 +92,11 @@ export default function SettingsScreen() {
 					min={18}
 					max={100}
 					step={1}
-					sliderLength={280} 
-					selectedStyle={{ backgroundColor: "#9333EA" }} 
-					unselectedStyle={{ backgroundColor: "#E5E7EB" }} 
+					sliderLength={280}
+					selectedStyle={{ backgroundColor: "#9333EA" }}
+					unselectedStyle={{ backgroundColor: "#E5E7EB" }}
 					markerStyle={{
-						backgroundColor: "#9333EA", 
+						backgroundColor: "#9333EA",
 						height: 24,
 						width: 24,
 						borderRadius: 12,
@@ -117,7 +125,9 @@ export default function SettingsScreen() {
 						<CheckboxIndicator>
 							<CheckboxIcon as={CheckIcon} />
 						</CheckboxIndicator>
-						<CheckboxLabel>{gender.charAt(0).toUpperCase() + gender.slice(1)}</CheckboxLabel>
+						<CheckboxLabel>
+							{gender.charAt(0).toUpperCase() + gender.slice(1)}
+						</CheckboxLabel>
 					</Checkbox>
 				))}
 				<Button className="bg-purple-500 mt-4 mb-4" onPress={updateDB}>

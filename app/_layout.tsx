@@ -7,9 +7,18 @@ import { useFonts } from "expo-font";
 import { Ionicons } from "@expo/vector-icons";
 import * as SplashScreen from "expo-splash-screen";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { ThemeProvider } from "@/ThemeContext";
+import { useColorScheme } from "nativewind";
+import {
+	DarkTheme,
+	DefaultTheme,
+	ThemeProvider as NavigationThemeProvider,
+} from "@react-navigation/native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Text } from "@/components/ui/text";
 
 export default function RootLayout() {
-	const [colorMode, setColorMode] = useState<"light" | "dark">("light");
+	const [colorMode, setColorMode] = useState<"light" | "dark">("dark");
 
 	const [loaded, error] = useFonts({
 		...Ionicons.font,
@@ -26,19 +35,17 @@ export default function RootLayout() {
 	}
 
 	return (
-		<GluestackUIProvider mode={colorMode}>
+		<ThemeProvider>
 			<GestureHandlerRootView>
-				<Box className="flex-1 bg-zinc-100 dark:bg-zinc-900">
-					<Stack
-						screenOptions={{
-							headerShown: false,
-						}}
-					>
-						<Stack.Screen name="login" options={{ headerShown: false }} />
-						<Stack.Screen name="(protected)" options={{ headerShown: false }} />
-					</Stack>
-				</Box>
+				<Stack
+					screenOptions={{
+						headerShown: false,
+					}}
+				>
+					<Stack.Screen name="login" options={{ headerShown: false }} />
+					<Stack.Screen name="(protected)" options={{ headerShown: false }} />
+				</Stack>
 			</GestureHandlerRootView>
-		</GluestackUIProvider>
+		</ThemeProvider>
 	);
 }
