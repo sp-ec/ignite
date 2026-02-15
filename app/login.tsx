@@ -41,7 +41,7 @@ export default function Login() {
 			}
 			setLoading(false);
 		});
-
+		console.log(process.env.OPENAI_API_KEY);
 		return unsubscribe;
 	}, []);
 
