@@ -1,3 +1,4 @@
+import { db } from "@/FirebaseConfig";
 import DateSelector from "@/components/custom/date-selector";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
@@ -21,7 +22,8 @@ import { VStack } from "@/components/ui/vstack";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { getAuth } from "firebase/auth";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -48,28 +50,52 @@ export default function IndexScreen() {
 
 	const router = useRouter();
 
-	//const user = getAuth().currentUser;
+	const user = getAuth().currentUser;
+	const usersCollection = collection(db, 'users');
 
 	useEffect(() => {
-		const auth = getAuth();
-		const unsubscribe = onAuthStateChanged(auth, (user) => {
-		  if (!user) {
-			router.replace("/login");
-		  } else {
-			setLoading(false);
-		  }
-		});
+		const getUserData = async () => {
+			if (!user) {
+				router.replace("/");
+				return;
+			}
+			
+
+			try {
+				const q = query(usersCollection, where("userID", "==", user.uid));
+				const qSnapshot = await getDocs(q);
+
+				if (!qSnapshot.empty) {
+					const userData = qSnapshot.docs[0].data();
+
+					setName(userData.name);
+					setBio(userData.bio);
+					setGender(userData.gender);
+					setPhotos(userData.photos);
+					console.log(name);
+				}
+			} catch (error) {
+				console.log("Error fetching user data: ", error);
+			} finally {
+				setLoading(false);
+			}
+		}
+
+		getUserData();
+	}, [user]);
+
+	const fetchUserData = async () => {
+		
+
+	};
 	
-		return unsubscribe;
-	  }, []);
-	
-	  if (loading) {
-		return (
-		  <SafeAreaView style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-			<ActivityIndicator size="large" />
-		  </SafeAreaView>
-		);
-	  }
+	if (loading) {
+	return (
+		<SafeAreaView style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+		<ActivityIndicator size="large" />
+		</SafeAreaView>
+	);
+	}
 
 	if (isEditing) {
 		return (
