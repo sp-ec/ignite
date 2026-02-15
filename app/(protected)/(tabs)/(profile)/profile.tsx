@@ -72,10 +72,20 @@ export default function IndexScreen() {
 						let dateObj = userData.dob.toDate();
 
 						const monthNames = [
-							"Jan", "Feb", "Mar", "Apr", "May", "Jun",
-							"Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+							"Jan",
+							"Feb",
+							"Mar",
+							"Apr",
+							"May",
+							"Jun",
+							"Jul",
+							"Aug",
+							"Sep",
+							"Oct",
+							"Nov",
+							"Dec",
 						];
-					
+
 						setDob({
 							month: monthNames[dateObj.getMonth()],
 							day: dateObj.getDate().toString(),
@@ -98,7 +108,7 @@ export default function IndexScreen() {
 			<SafeAreaView
 				style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
 			>
-				<ActivityIndicator size="large" />
+				<ActivityIndicator size="large" color="AD46FF" />
 			</SafeAreaView>
 		);
 	}
