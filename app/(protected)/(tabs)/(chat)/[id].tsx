@@ -15,6 +15,7 @@ import {
 	updateDoc,
 } from "firebase/firestore";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { OpenAI } from "openai";
 import { Card } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
 import {
@@ -53,6 +54,12 @@ import {
 } from "@/components/ui/accordion";
 import { ChevronDownIcon } from "@/components/ui/icon";
 import { ChevronUpIcon } from "@/components/ui/icon";
+import { Env } from "./../../../../node_modules/@openrouter/sdk/esm/lib/env.d";
+import {
+	generateAIResult,
+	generateConversationStarters,
+	generateDateIdeas,
+} from "@/ai";
 
 export const getChatPartnerProfile = async (
 	chatId: string,
@@ -103,7 +110,8 @@ export default function ChatRoom() {
 		photo: string | null;
 	} | null>(null);
 	const [messages, setMessages] = useState<IMessage[]>([]);
-	const [isExpanded, setIsExpanded] = useState(false);
+	const [waitingForAI, setWaitingForAI] = useState(false);
+	const [aiResponse, setAiResponse] = useState<string>("");
 
 	const { colorMode } = useTheme();
 	const isDark = colorMode === "dark";
@@ -240,8 +248,8 @@ export default function ChatRoom() {
 					</HStack>
 				</Card>
 				<Accordion
-					className="w-[90%] m-5 border border-outline-300"
-					type="multiple"
+					className="w-[90%] m-5 border border-outline-300 absolute top-32 z-10"
+					type="single"
 				>
 					<AccordionItem value="a" className="border-b border-outline-300">
 						<AccordionHeader className="bg-background-0">
@@ -251,9 +259,9 @@ export default function ChatRoom() {
 										<>
 											<AccordionTitleText>Ignite AI</AccordionTitleText>
 											{isExpanded ? (
-												<AccordionIcon as={ChevronUpIcon} />
+												<Ionicons name="diamond" size={24} color={"#C27AFF"} />
 											) : (
-												<AccordionIcon as={ChevronDownIcon} />
+												<Ionicons name="diamond" size={24} color={"#C27AFF"} />
 											)}
 										</>
 									);
@@ -261,7 +269,54 @@ export default function ChatRoom() {
 							</AccordionTrigger>
 						</AccordionHeader>
 						<AccordionContent className="mt-0 pt-2 bg-background-50">
-							<Button></Button>
+							<HStack className="justify-between items-center">
+								<Button
+									onPress={async () => {
+										setWaitingForAI(true);
+										try {
+											const result =
+												await generateConversationStarters(messages);
+											if (result) {
+												setAiResponse(result);
+											}
+										} catch (error) {
+											console.error("Error generating starters:", error);
+										} finally {
+											setWaitingForAI(false);
+										}
+									}}
+								>
+									<ButtonText>Conversation Starter</ButtonText>
+								</Button>
+								<Button
+									onPress={async () => {
+										setWaitingForAI(true);
+										try {
+											const result = await generateDateIdeas(messages);
+											if (result) {
+												setAiResponse(result);
+											}
+										} catch (error) {
+											console.error("Error generating starters:", error);
+										} finally {
+											setWaitingForAI(false);
+										}
+									}}
+									className="w-32"
+								>
+									<ButtonText>Date Idea</ButtonText>
+								</Button>
+							</HStack>
+							{waitingForAI && (
+								<ActivityIndicator
+									size="small"
+									color="#C27AFF"
+									className="p-32"
+								/>
+							)}
+							{!waitingForAI && aiResponse && (
+								<Text className="mt-4">{aiResponse}</Text>
+							)}
 						</AccordionContent>
 					</AccordionItem>
 				</Accordion>
