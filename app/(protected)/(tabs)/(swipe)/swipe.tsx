@@ -1,30 +1,26 @@
-import { Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { HStack } from "@/components/ui/hstack";
-import { VStack } from "@/components/ui/vstack";
-import { Image } from "@/components/ui/image";
 import { Card } from "@/components/ui/card";
-import { ScrollView } from "react-native";
-import { useState } from "react";
-import { Dimensions } from "react-native";
+import { HStack } from "@/components/ui/hstack";
+import { Image } from "@/components/ui/image";
+import { VStack } from "@/components/ui/vstack";
 import { Ionicons } from "@expo/vector-icons";
+import { useState } from "react";
+import { Dimensions, ScrollView, Text } from "react-native";
 import {
 	Gesture,
 	GestureDetector,
 	GestureHandlerRootView,
 } from "react-native-gesture-handler";
 import Animated, {
-	useSharedValue,
-	useAnimatedStyle,
-	withSpring,
-	ZoomIn,
-	ZoomOut,
-	runOnJS,
-	SlideInRight,
-	SlideOutRight,
 	SlideInLeft,
-	SlideOutLeft, // 1. Import runOnJS
+	SlideInRight,
+	SlideOutLeft,
+	SlideOutRight,
+	runOnJS,
+	useAnimatedStyle,
+	useSharedValue,
+	withSpring
 } from "react-native-reanimated";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const capitalize = (str: string) => {
 	if (!str) return str;
@@ -37,7 +33,6 @@ const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.25;
 export default function IndexScreen() {
 	const [gender, setGender] = useState("woman");
 
-	// 2. Add state to control visibility
 	const [showRejectIcon, setShowRejectIcon] = useState(false);
 	const [showAcceptIcon, setShowAcceptIcon] = useState(false);
 
@@ -48,8 +43,6 @@ export default function IndexScreen() {
 		.onUpdate((event) => {
 			translateX.value = event.translationX;
 
-			// 3. Check threshold and update React State via runOnJS
-			// We check !showIcon to avoid triggering a re-render 60 times a second
 			if (Math.abs(event.translationX) > SWIPE_THRESHOLD * 0.2) {
 				const isRightSwipe = event.translationX > 0;
 				if (isRightSwipe && !showAcceptIcon) {
@@ -72,7 +65,6 @@ export default function IndexScreen() {
 					{},
 					() => {
 						translateX.value = 0;
-						// Reset state after animation
 						runOnJS(setShowRejectIcon)(false);
 						runOnJS(setShowAcceptIcon)(false);
 					},
@@ -94,7 +86,7 @@ export default function IndexScreen() {
 	return (
 		<GestureHandlerRootView style={{ flex: 1 }}>
 			<GestureDetector gesture={panGesture}>
-				{/* We removed the <View> wrapper here to ensure gestures work properly */}
+				{}
 				<Animated.View style={{ flex: 1 }}>
 					<ScrollView
 						contentContainerStyle={{
@@ -145,14 +137,14 @@ export default function IndexScreen() {
 												meow{" "}
 											</Text>
 										</Card>
-										{/* Extra images removed for brevity */}
+										{}
 									</VStack>
 								</Card>
 							</SafeAreaView>
 						</Animated.View>
 					</ScrollView>
 
-					{/* 4. Use the State Variable, NOT the Shared Value */}
+					{}
 					{showRejectIcon && (
 						<Animated.View
 							className="absolute z-50 inset-0 justify-center items-start"
@@ -166,7 +158,7 @@ export default function IndexScreen() {
 								size={32}
 								color={"#FF637E"}
 								className="p-3 bg-red-100 rounded-full ml-4"
-								style={{ overflow: "hidden" }} // Added to prevent iOS visual bugs
+								style={{ overflow: "hidden" }} 
 							/>
 						</Animated.View>
 					)}
@@ -183,7 +175,7 @@ export default function IndexScreen() {
 								size={32}
 								color={"#AD46FF"}
 								className="p-3 bg-purple-100 rounded-full mr-4"
-								style={{ overflow: "hidden" }} // Added to prevent iOS visual bugs
+								style={{ overflow: "hidden" }} 
 							/>
 						</Animated.View>
 					)}
