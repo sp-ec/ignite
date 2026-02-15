@@ -1,5 +1,10 @@
 import { auth, db } from "@/FirebaseConfig";
 import { useTheme } from "@/ThemeContext";
+import {
+	Alert,
+	AlertIcon,
+	AlertText,
+} from "@/components/ui/alert";
 import { Button, ButtonText } from "@/components/ui/button";
 import {
 	Checkbox,
@@ -9,7 +14,7 @@ import {
 	CheckboxLabel,
 } from "@/components/ui/checkbox";
 import { HStack } from "@/components/ui/hstack";
-import { CheckIcon } from "@/components/ui/icon";
+import { CheckIcon, InfoIcon } from "@/components/ui/icon";
 import { VStack } from "@/components/ui/vstack";
 import { Ionicons } from "@expo/vector-icons";
 import MultiSlider from "@ptomasroos/react-native-multi-slider";
@@ -28,6 +33,7 @@ import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SettingsScreen() {
+	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const [ageRange, setAgeRange] = useState<[number, number]>([18, 60]);
 	const [genderPref, setGenderPref] = useState<string[]>([]);
 	const { toggleColorMode, colorMode } = useTheme();
@@ -84,13 +90,16 @@ export default function SettingsScreen() {
 
 		const userRef = doc(db, "users", user.uid);
 		try {
+			setErrorMessage(null)
 			await updateDoc(userRef, {
 				ageRange,
 				genderPreference: genderPref,
 			});
-			alert("Preferences Saved");
+			//alert("Preferences Saved");
+			setErrorMessage("Preferences Saved!");
 		} catch (error) {
-			alert("Failed to save preferences");
+			//alert("Failed to save preferences");
+			setErrorMessage("Failed to save preference: Try again or wait 5 minutes.");
 		}
 	};
 
@@ -122,6 +131,17 @@ export default function SettingsScreen() {
 							Settings
 						</Text>
 					</HStack>
+					{errorMessage && (
+						<Alert
+							action="muted"
+							variant="outline"
+							className="w-64 mb-6"
+						>
+							<AlertIcon as={InfoIcon} />
+							<AlertText>{errorMessage}</AlertText>
+						</Alert>
+					)}
+
 					<Text className="text-xl mb-4 dark:text-zinc-200">General</Text>
 					<Button
 						onPress={toggleColorMode}
