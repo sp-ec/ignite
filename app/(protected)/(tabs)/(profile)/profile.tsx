@@ -22,7 +22,7 @@ import { VStack } from "@/components/ui/vstack";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
-import { getAuth } from "firebase/auth";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Text } from "react-native";
@@ -54,25 +54,41 @@ export default function IndexScreen() {
 	const usersCollection = collection(db, 'users');
 
 	useEffect(() => {
+		const auth = getAuth();
+		const unsubscribe = onAuthStateChanged(auth, (user) => {
+		  if (!user) {
+			router.replace("/login");
+		  } else {
+			//setLoading(false);
+		  }
+		});
+	
+		return unsubscribe;
+	  }, []);
+
+	useEffect(() => {
 		const getUserData = async () => {
+			/*
 			if (!user) {
 				router.replace("/");
 				return;
 			}
-			
+			*/
 
 			try {
-				const q = query(usersCollection, where("uid", "==", user.uid));
-				const qSnapshot = await getDocs(q);
+				if (user) {
+					const q = query(usersCollection, where("uid", "==", user.uid));
+					const qSnapshot = await getDocs(q);
+				
 
-				if (!qSnapshot.empty) {
-					console.log("HERE");
-					const userData = qSnapshot.docs[0].data();
+					if (!qSnapshot.empty) {
+						const userData = qSnapshot.docs[0].data();
 
-					setName(userData.name);
-					setBio(userData.bio);
-					setGender(userData.gender);
-					setPhotos(userData.photos);
+						setName(userData.name);
+						setBio(userData.bio);
+						setGender(userData.gender);
+						setPhotos(userData.photos);
+					}
 				}
 			} catch (error) {
 				console.log("Error fetching user data: ", error);
