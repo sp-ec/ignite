@@ -11,12 +11,19 @@ import { useState, useEffect } from "react";
 import { ActivityIndicator, SafeAreaView, View } from "react-native";
 import { auth } from "../FirebaseConfig";
 import { Text } from "@/components/ui/text";
+import { useTheme } from "@/ThemeContext";
 
 export default function Login() {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [loading, setLoading] = useState(true);
 	const router = useRouter();
+
+	const { colorMode } = useTheme();
+	const isDark = colorMode === "dark";
+
+	// Theme Colors
+	const bgColor = isDark ? "#18181B" : "#F5F5F5";
 
 	useEffect(() => {
 		const auth = getAuth();
@@ -46,11 +53,20 @@ export default function Login() {
 
 	if (loading) {
 		return (
-			<SafeAreaView
-				style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+			<View
+				style={{
+					flex: 1,
+					backgroundColor: bgColor,
+					justifyContent: "center",
+					alignItems: "center",
+				}}
 			>
-				<ActivityIndicator size="large" color="#AD46FF" />
-			</SafeAreaView>
+				<SafeAreaView
+					style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+				>
+					<ActivityIndicator size="large" color="AD46FF" />
+				</SafeAreaView>
+			</View>
 		);
 	}
 
@@ -60,9 +76,12 @@ export default function Login() {
 				flex: 1,
 				justifyContent: "center",
 				alignItems: "center",
+				backgroundColor: bgColor,
 			}}
 		>
-			<Text className="text-3xl font-extrabold mb-2">Dating App</Text>
+			<Text className="text-3xl font-extrabold mb-2 text-purple-500">
+				Ignite
+			</Text>
 			<Text className="mb-32 ">Making connections easier.</Text>
 			<VStack className="w-64">
 				<Input className="mb-4 text-zinc-900" size="xl">
