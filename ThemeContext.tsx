@@ -13,7 +13,7 @@ type ThemeContextType = {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-	const [colorMode, setColorMode] = useState<"light" | "dark">("light");
+	const [colorMode, setColorMode] = useState<"light" | "dark">("dark");
 	const { colorScheme, setColorScheme } = useColorScheme();
 
 	const toggleColorMode = () => {

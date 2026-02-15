@@ -4,10 +4,6 @@ import { HStack } from "@/components/ui/hstack";
 import { Image } from "@/components/ui/image";
 import { VStack } from "@/components/ui/vstack";
 import { Ionicons } from "@expo/vector-icons";
-import { getAuth } from "firebase/auth";
-import { Timestamp, collection, doc, getDoc, getDocs, query, setDoc, where } from "firebase/firestore";
-import { useEffect, useState } from "react";
-import { Dimensions, ScrollView, Text } from "react-native";
 import {
 	Gesture,
 	GestureDetector,
@@ -34,8 +30,6 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.25;
 
 export default function IndexScreen() {
-	const [gender, setGender] = useState("woman");
-
 	const [showRejectIcon, setShowRejectIcon] = useState(false);
 	const [showAcceptIcon, setShowAcceptIcon] = useState(false);
 
@@ -166,6 +160,8 @@ export default function IndexScreen() {
 		.onEnd(() => {
 			if (Math.abs(translateX.value) > SWIPE_THRESHOLD) {
 				const direction = translateX.value > 0 ? "right" : "left";
+				const swipedUid = profiles[currentIndex].uid;
+
 				translateX.value = withSpring(
 					direction === "right" ? SCREEN_WIDTH * 1.2 : -SCREEN_WIDTH * 1.2,
 					{},
@@ -173,6 +169,9 @@ export default function IndexScreen() {
 						translateX.value = 0;
 						runOnJS(setShowRejectIcon)(false);
 						runOnJS(setShowAcceptIcon)(false);
+
+						runOnJS(handleSwipe)(swipedUid, direction);
+						runOnJS(setCurrentIndex)(prev => prev + 1);
 					},
 				);
 			} else {
@@ -230,6 +229,7 @@ export default function IndexScreen() {
 													)}
 													<Text className="text-lg ml-2">
 														{capitalize(currentProfile.gender)}
+														{capitalize(currentProfile.gender)}
 													</Text>
 												</HStack>
 											</HStack>
@@ -278,6 +278,7 @@ export default function IndexScreen() {
 								size={32}
 								color={"#AD46FF"}
 								className="p-3 bg-purple-100 rounded-full mr-4"
+								style={{ overflow: "hidden" }} 
 								style={{ overflow: "hidden" }} 
 							/>
 						</Animated.View>

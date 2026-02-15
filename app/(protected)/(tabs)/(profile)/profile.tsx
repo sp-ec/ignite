@@ -132,6 +132,8 @@ export default function IndexScreen() {
 		if (!user) return;
 
 		try {
+			const photoUrls = await uploadPhotos(user.uid, photos);
+
 			const userDocRef = doc(db, "users", user.uid);
 
 			await setDoc(
@@ -140,7 +142,7 @@ export default function IndexScreen() {
 					name,
 					bio,
 					gender,
-					photos,
+					photos: photoUrls,
 				},
 				{ merge: true },
 			);
