@@ -1,5 +1,4 @@
 import { db } from "@/FirebaseConfig";
-import DateSelector from "@/components/custom/date-selector";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { HStack } from "@/components/ui/hstack";
@@ -46,6 +45,7 @@ export default function IndexScreen() {
 	const [bio, setBio] = useState("");
 	const [dob, setDob] = useState({ month: "Jan", day: "1", year: "2000" });
 	const [loading, setLoading] = useState(true);
+	const [age, setAge] = useState("");
 
 	const router = useRouter();
 
@@ -81,6 +81,20 @@ export default function IndexScreen() {
 							day: dateObj.getDate().toString(),
 							year: dateObj.getFullYear().toString(),
 						});
+
+						const today = new Date();
+
+						let age = today.getFullYear() - dateObj.getFullYear();
+						const diff = today.getMonth() - dateObj.getMonth();
+
+						if (
+							diff < 0 ||
+							diff === 0 && today.getDate() < dateObj.getDate()
+							) {
+								age--;
+							}
+
+						setAge(age.toString());
 					}
 				} catch (error) {
 					console.log("Error fetching user data: ", error);
@@ -165,7 +179,6 @@ export default function IndexScreen() {
 							</Box>
 						))}
 					</HStack>
-					<DateSelector onDateChange={(newDate) => setDob(newDate)} />
 					<VStack>
 						<Text className="text-md">Gender</Text>
 						<Select
@@ -228,7 +241,7 @@ export default function IndexScreen() {
 		>
 			<VStack className="p-8">
 				<HStack className="justify-between">
-					<Text className="text-2xl mb-4 w-64">{name}</Text>
+					<Text className="text-2xl mb-4 w-64">{name + ", " + age}</Text>
 					<Button
 						className="bg-zinc-200 w-12 h-12 p-0 rounded-lg"
 						onPress={() =>
@@ -253,12 +266,6 @@ export default function IndexScreen() {
 						</Box>
 					))}
 				</HStack>
-				<VStack className="mb-4">
-					<Text className="text-md mb-2">Birthdate</Text>
-					<Text className="text-md">
-						{capitalize(dob.month)} {dob.day}, {dob.year}
-					</Text>
-				</VStack>
 				<VStack className="mb-4">
 					<Text className="text-md mb-2">Gender</Text>
 					<Text className="text-md">{capitalize(gender)}</Text>
