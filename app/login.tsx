@@ -1,19 +1,28 @@
+import { useTheme } from "@/ThemeContext";
+import {
+	Alert,
+	AlertIcon,
+	AlertText,
+} from "@/components/ui/alert";
 import { Button, ButtonText } from "@/components/ui/button";
+import { InfoIcon } from "@/components/ui/icon";
 import { Input, InputField } from "@/components/ui/input";
+import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
-import { router, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import {
 	getAuth,
 	onAuthStateChanged,
 	signInWithEmailAndPassword,
 } from "firebase/auth";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ActivityIndicator, SafeAreaView, View } from "react-native";
 import { auth } from "../FirebaseConfig";
-import { Text } from "@/components/ui/text";
-import { useTheme } from "@/ThemeContext";
+  
 
 export default function Login() {
+	const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [loading, setLoading] = useState(true);
@@ -22,15 +31,12 @@ export default function Login() {
 	const { colorMode } = useTheme();
 	const isDark = colorMode === "dark";
 
-	// Theme Colors
 	const bgColor = isDark ? "#18181B" : "#F5F5F5";
 
 	useEffect(() => {
 		const auth = getAuth();
-		// Listen for auth state changes
 		const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
 			if (currentUser) {
-				// user found, immediately bring them to swipe
 				router.replace("/swipe");
 			}
 			setLoading(false);
@@ -41,13 +47,15 @@ export default function Login() {
 
 	const signIn = async () => {
 		try {
+			setErrorMessage(null);
 			const user = await signInWithEmailAndPassword(auth, email, password);
 			if (user) {
 				router.replace("/swipe");
 			}
 		} catch (error: any) {
 			console.log(error);
-			alert("Sign in failed: " + error.message);
+			//alert("Sign in failed: " + error.message);
+			setErrorMessage("Sign in failed: Wrong username or password.");
 		}
 	};
 
@@ -83,6 +91,16 @@ export default function Login() {
 				Ignite
 			</Text>
 			<Text className="mb-32 ">Making connections easier.</Text>
+			{errorMessage && (
+				<Alert
+					action="error"
+					variant="outline"
+					className="w-64 mb-6"
+				>
+					<AlertIcon as={InfoIcon}/>
+					<AlertText>{errorMessage}</AlertText>
+				</Alert>
+			)}
 			<VStack className="w-64">
 				<Input className="mb-4 text-zinc-900 dark:text-zinc-200" size="xl">
 					<InputField
