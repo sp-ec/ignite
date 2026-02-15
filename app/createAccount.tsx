@@ -69,7 +69,9 @@ export default function createAccount() {
         bio: bio,
         dob: Timestamp.fromDate(new Date(Number(year), Number(month), Number(day))),
         gender: gender,
-        photos: photoUrls
+        photos: photoUrls,
+        ageRange: [18, 60],
+        genderPreference: ["men", "women", "non-binary"],
       });
 
 			if (user) {
