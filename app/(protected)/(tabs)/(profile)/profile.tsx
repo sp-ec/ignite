@@ -22,7 +22,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, doc, getDocs, query, setDoc, where } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -116,6 +116,29 @@ export default function IndexScreen() {
 
 		return unsubscribe;
 	}, []);
+
+	const updateDB = async () => {
+		if (!user) return;
+
+		try {
+			const userDocRef = doc(db, 'users', user.uid);
+
+			await setDoc(
+				userDocRef,
+				{
+					name,
+					bio,
+					gender,
+					photos
+				},
+				{ merge: true }
+			);
+
+			setIsEditing(false);
+		} catch (error) {
+			alert("Error saving profile: " + error);
+		}
+	};
 
 	if (loading) {
 		return (
@@ -235,7 +258,7 @@ export default function IndexScreen() {
 							setPhotos(photos);
 						}}
 					>
-						<ButtonText className="text-zinc-200 text-md">
+						<ButtonText className="text-zinc-200 text-md" onPress={updateDB}>
 							Save Profile
 						</ButtonText>
 					</Button>
