@@ -24,7 +24,6 @@ import {
 	where,
 } from "firebase/firestore";
 import { db } from "@/FirebaseConfig";
-import { router } from "expo-router";
 
 export default function IndexScreen() {
 	const [matches, setMatches] = useState<any[]>([]);
@@ -165,11 +164,11 @@ export default function IndexScreen() {
 					data={matches}
 					keyExtractor={(item) => item.id}
 					renderItem={({ item }) => (
-						<Pressable>
+						<Pressable onPress={() => router.push(`/(chat)/${item.id}`)}>
 							<Card>
-								<Box className="flex-row">
+								<Box className="flex-row rounded-xl">
 									<Avatar className="mr-4">
-										<AvatarFallbackText>JD</AvatarFallbackText>
+										<AvatarFallbackText>{item.displayName}</AvatarFallbackText>
 										<AvatarImage
 											source={{
 												uri:
@@ -180,10 +179,13 @@ export default function IndexScreen() {
 									</Avatar>
 									<VStack>
 										<Text className="text-md mb-1 dark:text-zinc-200">
-											{item.displayName}
+											{item.displayName || "Unknown User"}
 										</Text>
-										<Text className="sm dark:text-zinc-200">
-											{item.lastMessage || "No messages yet."}
+										<Text className="sm dark:text-zinc-200 truncate text-overflow-ellipsis line-clamp-1 max-w-64">
+											{typeof item.lastMessage === "object" &&
+											item.lastMessage !== null
+												? item.lastMessage.text
+												: item.lastMessage || "No messages yet."}
 										</Text>
 									</VStack>
 								</Box>
