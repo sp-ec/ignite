@@ -1,10 +1,11 @@
-import { db } from "@/FirebaseConfig";
+import { db, storage } from "@/FirebaseConfig";
+import { useTheme } from "@/ThemeContext";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { HStack } from "@/components/ui/hstack";
 import { ChevronDownIcon } from "@/components/ui/icon";
 import { Image } from "@/components/ui/image";
-import { View } from "react-native";
 import { Input, InputField } from "@/components/ui/input";
 import {
 	Select,
@@ -31,12 +32,11 @@ import {
 	setDoc,
 	where,
 } from "firebase/firestore";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Text } from "react-native";
+import { ActivityIndicator, Text, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useTheme } from "@/ThemeContext";
-import { Card } from "@/components/ui/card";
 
 const onDateChange = (date: { month: string; day: string; year: string }) => {
 	console.log("Selected date:", date);
@@ -151,6 +151,25 @@ export default function IndexScreen() {
 		}
 	};
 
+	const uploadPhotos = async (uid: string, uris: string[]) => {
+		const uploadedUrls: string[] = [];
+	
+		for (let i = 0; i < uris.length; i++) {
+		  const uri = uris[i];
+	
+		  const response = await fetch(uri);
+		  const blob = await response.blob();
+	
+		  const storageRef = ref(storage, `users/${uid}/photo_${i}.jpg`);
+		  await uploadBytes(storageRef, blob);
+	
+		  const downloadUrl = await getDownloadURL(storageRef);
+		  uploadedUrls.push(downloadUrl);
+		}
+	
+		return uploadedUrls;
+	  };
+
 	const { colorMode } = useTheme();
 	const isDark = colorMode === "dark";
 
@@ -191,7 +210,7 @@ export default function IndexScreen() {
 						flex: 1,
 					}}
 				>
-					<ScrollView>
+					<ScrollView showsVerticalScrollIndicator={false}>
 						<VStack className="p-8">
 							<Input className="mb-4 w-64">
 								<InputField
@@ -224,10 +243,16 @@ export default function IndexScreen() {
 											quality: 1,
 										});
 
-										if (!result.canceled) {
+										if (!result.canceled && user) {
 											const uris = result.assets.map((asset) => asset.uri);
-											setPhotos(uris);
-											console.log("Selected URIs:", uris);
+											
+											try {
+												const uploadedUrls = await uploadPhotos(user.uid, uris);
+												setPhotos(uploadedUrls);
+											} catch (error) {
+												console.log("Upload error: ", error);
+											}
+
 										}
 									} catch (error) {
 										console.log("Picker Error: ", error);
@@ -285,19 +310,10 @@ export default function IndexScreen() {
 							</Input>
 							<Button
 								className="bg-purple-500"
-								onPress={() => {
-									// Handle save action here
-									setIsEditing(false);
-									setName(name);
-									setBio(bio);
-									setGender(gender);
-									setDob(dob);
-									setPhotos(photos);
-								}}
+								onPress={updateDB}
 							>
 								<ButtonText
 									className="text-zinc-200 text-md"
-									onPress={updateDB}
 								>
 									Save Profile
 								</ButtonText>
@@ -322,60 +338,62 @@ export default function IndexScreen() {
 					flex: 1,
 				}}
 			>
-				<VStack className="p-8">
-					<HStack className="justify-between">
-						<Text className="text-2xl mb-4 w-64 dark:text-zinc-200">
-							{name + ", " + age}
-						</Text>
-						<Button
-							className="dark:bg-zinc-300 w-12 h-12 p-0 rounded-lg"
-							onPress={() =>
-								router.replace(
-									"/(protected)/(tabs)/(profile)/(settings)/settings",
-								)
-							}
-						>
-							<Ionicons name="settings-outline" size={24} color={bgColor} />
-						</Button>
-					</HStack>
-
-					<Text className="text-lg mb-2 dark:text-zinc-200">Your Photos</Text>
-					<HStack space="md" className="mb-8 justify-around">
-						{photos.map((uri, index) => (
-							<Box key={index} className="relative">
-								<Image
-									source={{ uri: uri }}
-									alt={`Profile photo ${index + 1}`}
-									className="rounded-lg w-28 h-48"
-								/>
-							</Box>
-						))}
-					</HStack>
-					<Card className="mb-4">
-						<VStack>
-							<Text className="text-lg mb-2 dark:text-zinc-200">Gender</Text>
-							<Text className="text-md dark:text-zinc-200">
-								{capitalize(gender)}
+				<ScrollView showsVerticalScrollIndicator={false}>
+					<VStack className="p-8">
+						<HStack className="justify-between">
+							<Text className="text-2xl mb-4 w-64 dark:text-zinc-200">
+								{name + ", " + age}
 							</Text>
-						</VStack>
-					</Card>
+							<Button
+								className="dark:bg-zinc-300 w-12 h-12 p-0 rounded-lg"
+								onPress={() =>
+									router.replace(
+										"/(protected)/(tabs)/(profile)/(settings)/settings",
+									)
+								}
+							>
+								<Ionicons name="settings-outline" size={24} color={bgColor} />
+							</Button>
+						</HStack>
 
-					<Card className="mb-16">
-						<Text className="text-lg dark:text-zinc-200 mb-2">Bio</Text>
-						<Text className="text-md mb-8 dark:text-zinc-200">{bio} </Text>
-					</Card>
-					<Button
-						className="bg-zinc-700 dark:bg-zinc-300 mb-4"
-						onPress={() => {
-							// Handle edit action here
-							setIsEditing(true);
-						}}
-					>
-						<ButtonText className="text-zinc-200 dark:text-zinc-800 text-md">
-							Edit Profile
-						</ButtonText>
-					</Button>
-				</VStack>
+						<Text className="text-lg mb-2 dark:text-zinc-200">Your Photos</Text>
+						<HStack space="md" className="mb-8 justify-around">
+							{photos.map((uri, index) => (
+								<Box key={index} className="relative">
+									<Image
+										source={{ uri: uri }}
+										alt={`Profile photo ${index + 1}`}
+										className="rounded-lg w-28 h-48"
+									/>
+								</Box>
+							))}
+						</HStack>
+						<Card className="mb-4">
+							<VStack>
+								<Text className="text-lg mb-2 dark:text-zinc-200">Gender</Text>
+								<Text className="text-md dark:text-zinc-200">
+									{capitalize(gender)}
+								</Text>
+							</VStack>
+						</Card>
+
+						<Card className="mb-16">
+							<Text className="text-lg dark:text-zinc-200 mb-2">Bio</Text>
+							<Text className="text-md mb-8 dark:text-zinc-200">{bio} </Text>
+						</Card>
+						<Button
+							className="bg-zinc-700 dark:bg-zinc-300 mb-4"
+							onPress={() => {
+								// Handle edit action here
+								setIsEditing(true);
+							}}
+						>
+							<ButtonText className="text-zinc-200 dark:text-zinc-800 text-md">
+								Edit Profile
+							</ButtonText>
+						</Button>
+					</VStack>
+				</ScrollView>
 			</SafeAreaView>
 		</View>
 	);
