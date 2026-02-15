@@ -54,13 +54,10 @@ export default function IndexScreen() {
 
 	useEffect(() => {
 		const auth = getAuth();
-		// Listen for auth state changes
 		const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
 			if (!currentUser) {
-				// No user found, redirect immediately
 				router.replace("/login");
 			} else {
-				// User is authenticated, now fetch their data
 				try {
 					const q = query(usersCollection, where("uid", "==", currentUser.uid));
 					const qSnapshot = await getDocs(q);
@@ -71,12 +68,23 @@ export default function IndexScreen() {
 						setBio(userData.bio || "");
 						setGender(userData.gender || "");
 						setPhotos(userData.photos || []);
-						if (userData.dob) setDob(userData.dob);
+
+						let dateObj = userData.dob.toDate();
+
+						const monthNames = [
+							"Jan", "Feb", "Mar", "Apr", "May", "Jun",
+							"Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+						];
+					
+						setDob({
+							month: monthNames[dateObj.getMonth()],
+							day: dateObj.getDate().toString(),
+							year: dateObj.getFullYear().toString(),
+						});
 					}
 				} catch (error) {
 					console.log("Error fetching user data: ", error);
 				} finally {
-					// Only stop loading after the fetch attempt is complete
 					setLoading(false);
 				}
 			}
