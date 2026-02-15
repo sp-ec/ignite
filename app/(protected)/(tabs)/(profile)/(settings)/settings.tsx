@@ -1,4 +1,5 @@
 import { auth, db } from "@/FirebaseConfig";
+import { useTheme } from "@/ThemeContext";
 import { Button, ButtonText } from "@/components/ui/button";
 import {
 	Checkbox,
@@ -24,7 +25,6 @@ import {
 import { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useTheme } from "@/ThemeContext";
 
 export default function SettingsScreen() {
 	const [ageRange, setAgeRange] = useState<[number, number]>([18, 60]);
@@ -165,7 +165,7 @@ export default function SettingsScreen() {
 					<Text className="text-lg mb-4 dark:text-zinc-200">
 						Gender Preferences
 					</Text>
-					{["men", "women", "non-binary", "other"].map((gender) => (
+					{["man", "woman", "non-binary", "other"].map((gender) => (
 						<Checkbox
 							key={gender}
 							isChecked={genderPref.includes(gender)}

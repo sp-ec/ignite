@@ -3,7 +3,13 @@ import { HStack } from "@/components/ui/hstack";
 import { Image } from "@/components/ui/image";
 import { VStack } from "@/components/ui/vstack";
 import { Ionicons } from "@expo/vector-icons";
+<<<<<<< Updated upstream
 import { useState } from "react";
+=======
+import { getAuth } from "firebase/auth";
+import { Timestamp, collection, doc, getDoc, getDocs, query, setDoc, where } from "firebase/firestore";
+import { useEffect, useState } from "react";
+>>>>>>> Stashed changes
 import { Dimensions, ScrollView, Text } from "react-native";
 import {
 	Gesture,
@@ -36,8 +42,116 @@ export default function IndexScreen() {
 	const [showRejectIcon, setShowRejectIcon] = useState(false);
 	const [showAcceptIcon, setShowAcceptIcon] = useState(false);
 
+<<<<<<< Updated upstream
 	const translateX = useSharedValue(0);
 
+=======
+	const [profiles, setProfiles] = useState<any[]>([]);
+	const [currentIndex, setCurrentIndex] = useState(0);
+	const [loading, setLoading] = useState(true);
+
+	const translateX = useSharedValue(0);
+
+	const currentProfile = profiles[currentIndex];
+
+	useEffect(() => {
+		const getProfiles = async () => {
+			setLoading(true);
+			const currentUser = getAuth().currentUser;
+			if (!currentUser) return;
+	
+			try {
+				const currentUserDoc = await getDoc(doc(db, 'users', currentUser.uid));
+				if (!currentUserDoc.exists()) return;
+
+				const currentUserData = currentUserDoc.data();
+
+				const passesSnapshot = await getDocs(collection(db, 'users', currentUser.uid, 'passes'));
+				const passesUids = passesSnapshot.docs.map(doc => doc.id);
+
+				const likesSnapshot = await getDocs(collection(db, 'users', currentUser.uid, 'likes'));
+				const likesUids = likesSnapshot.docs.map(doc => doc.id);
+
+				const usersRef = collection(db, 'users');
+
+				const today = new Date();
+				const minAge = currentUserData.ageRange[0];
+				const maxAge = currentUserData.ageRange[1];
+
+				const youngestBirthdate = Timestamp.fromDate(new Date(
+					today.getFullYear() - minAge,
+					today.getMonth(),
+					today.getDate()
+				));
+
+				const oldestBirthdate = Timestamp.fromDate(new Date(
+					today.getFullYear() - maxAge - 1,
+					today.getMonth(),
+					today.getDate()
+				));
+
+				const q = query(
+					usersRef,
+					where("dob", ">=", oldestBirthdate),
+					where("dob", "<=", youngestBirthdate)
+				);
+
+				const usersSnapshot = await getDocs(q);				  
+
+				const users = usersSnapshot.docs
+					.map(doc => ({
+						uid: doc.id,
+						...(doc.data() as any),
+					}))
+					.filter(user => 
+						user.uid !== currentUser.uid &&
+						!passesUids.includes(user.uid) &&
+						!likesUids.includes(user.uid) 
+						&& currentUserData.genderPreference.includes(user.gender)
+					);
+				console.log(users);
+				setProfiles(users);
+			} catch (error) {
+				console.log("Error fetching profiles: ", error);
+				alert("Failed to load profiles")
+			} finally {
+				setLoading(false);
+			}
+		};
+		getProfiles();
+	}, []);
+	
+	const handleSwipe = async (swipedUserId: string, direction: "left" | "right") => {
+		const currentUser = getAuth().currentUser;
+		if (!currentUser) return;
+	
+		const userId = currentUser.uid;
+	
+		if (direction === "right") {
+			const likeRef = doc(db, 'users', userId, 'likes', swipedUserId);
+			await setDoc(likeRef, { createdAt: new Date() });
+	
+			const reverseLikeRef = doc(db, 'users', swipedUserId, 'likes', userId);
+			const reverseDoc = await getDoc(reverseLikeRef);
+	
+			if (reverseDoc.exists()) {
+				const matchId = [userId, swipedUserId].sort().join("_");
+				const matchRef = doc(db, 'matches', matchId);
+	
+				await setDoc(matchRef, {
+					users: [userId, swipedUserId],
+					createdAt: new Date(),
+				})
+			}
+		} else {
+			const passRef = doc(db, 'users', userId, 'passes', swipedUserId);
+			await setDoc(passRef, {
+				createdAt: new Date()
+			});
+		}
+	}
+
+>>>>>>> Stashed changes
 	const panGesture = Gesture.Pan()
 		.activeOffsetX([-10, 10])
 		.onUpdate((event) => {
@@ -85,6 +199,7 @@ export default function IndexScreen() {
 
 	return (
 		<GestureHandlerRootView style={{ flex: 1 }}>
+<<<<<<< Updated upstream
 			<GestureDetector gesture={panGesture}>
 				{}
 				<Animated.View style={{ flex: 1 }}>
@@ -125,10 +240,61 @@ export default function IndexScreen() {
 													<Text className="text-lg ml-2">
 														{capitalize(gender)}
 													</Text>
+=======
+			{loading ? (
+				<SafeAreaView style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+					<Text>Loading profiles...</Text>
+			  	</SafeAreaView>
+			) : !currentProfile ? (
+				<SafeAreaView style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        			<Text>No more profiles. Try expanding your preferences or wait for more users.</Text>
+      			</SafeAreaView>
+			) : (
+				<GestureDetector gesture={panGesture}>
+					<Animated.View style={{ flex: 1 }}>
+						<ScrollView
+							contentContainerStyle={{
+								flexGrow: 1,
+								justifyContent: "center",
+								alignItems: "center",
+							}}
+							showsVerticalScrollIndicator={false}
+						>
+							<Animated.View style={animatedStyle}>
+								<SafeAreaView style={{ flex: 1 }}>
+									<Card className=" m-2 w-[380px] rounded-xl mb-4 pb-0 border-2 border-zinc-300">
+										<VStack>
+											<Card className="mb-2 p-0 flex">
+												<Image
+													source={{
+														uri: currentProfile.photos?.[0],
+													}}
+													alt="Profile Picture"
+													className="w-[360px] h-[380px] rounded-md"
+												/>
+												<HStack className="justify-between p-4">
+													<Text className="text-2xl">{currentProfile.name}, {currentProfile.age}</Text>
+													<HStack className="justify-start items-center">
+														{currentProfile.gender === "man" ? (
+															<Ionicons name="male" size={24} color={"#000"} />
+														) : currentProfile.gender === "woman" ? (
+															<Ionicons name="female" size={24} color={"#000"} />
+														) : (
+															<Ionicons
+																name="male-female"
+																size={24}
+																color={"#000"}
+															/>
+														)}
+														<Text className="text-lg ml-2">
+															{capitalize(currentProfile.gender)}
+														</Text>
+													</HStack>
+>>>>>>> Stashed changes
 												</HStack>
-											</HStack>
-										</Card>
+											</Card>
 
+<<<<<<< Updated upstream
 										<Card className="mb-4">
 											<Text className="text-lg mt-4 ">
 												Meow meow meow Meow meow meow Meow meow meow Meow meow
@@ -181,6 +347,58 @@ export default function IndexScreen() {
 					)}
 				</Animated.View>
 			</GestureDetector>
+=======
+											<Card className="mb-4">
+												<Text className="text-lg mt-4 ">
+													{currentProfile.bio || "No bio available"}
+												</Text>
+											</Card>
+											{}
+										</VStack>
+									</Card>
+								</SafeAreaView>
+							</Animated.View>
+						</ScrollView>
+
+						{}
+						{showRejectIcon && (
+							<Animated.View
+								className="absolute z-50 inset-0 justify-center items-start"
+								pointerEvents="none"
+								style={{ elevation: 10 }}
+								entering={SlideInLeft.duration(300)}
+								exiting={SlideOutLeft.duration(300)}
+							>
+								<Ionicons
+									name="close"
+									size={32}
+									color={"#FF637E"}
+									className="p-3 bg-red-100 rounded-full ml-4"
+									style={{ overflow: "hidden" }}
+								/>
+							</Animated.View>
+						)}
+						{showAcceptIcon && (
+							<Animated.View
+								className="absolute z-50 inset-0 justify-center items-end"
+								pointerEvents="none"
+								style={{ elevation: 10 }}
+								entering={SlideInRight.duration(300)}
+								exiting={SlideOutRight.duration(300)}
+							>
+								<Ionicons
+									name="heart"
+									size={32}
+									color={"#AD46FF"}
+									className="p-3 bg-purple-100 rounded-full mr-4"
+									style={{ overflow: "hidden" }} 
+								/>
+							</Animated.View>
+						)}
+					</Animated.View>
+				</GestureDetector>
+			)}
+>>>>>>> Stashed changes
 		</GestureHandlerRootView>
 	);
 }
