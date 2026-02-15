@@ -18,7 +18,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Text } from "@/components/ui/text";
 
 export default function RootLayout() {
-	const [colorMode, setColorMode] = useState<"light" | "dark">("dark");
+	const [colorMode, setColorMode] = useState<"light" | "dark">("light");
 
 	const [loaded, error] = useFonts({
 		...Ionicons.font,

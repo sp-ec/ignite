@@ -84,19 +84,19 @@ export default function Login() {
 			</Text>
 			<Text className="mb-32 ">Making connections easier.</Text>
 			<VStack className="w-64">
-				<Input className="mb-4 text-zinc-900" size="xl">
+				<Input className="mb-4 text-zinc-900 dark:text-zinc-200" size="xl">
 					<InputField
 						placeholder="Email"
-						className="text-black"
+						className="text-zinc-900 dark:text-zinc-200"
 						value={email}
 						onChangeText={setEmail}
 						size="xl"
 					/>
 				</Input>
-				<Input className="mb-4 text-zinc-900" size="xl">
+				<Input className="mb-4 text-zinc-900 dark:text-zinc-200" size="xl">
 					<InputField
 						placeholder="Password"
-						className="text-black"
+						className="text-zinc-900 dark:text-zinc-200"
 						value={password}
 						onChangeText={setPassword}
 						size="xl"
