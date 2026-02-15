@@ -2,12 +2,13 @@ import { db } from "@/FirebaseConfig";
 import { Card } from "@/components/ui/card";
 import { HStack } from "@/components/ui/hstack";
 import { Image } from "@/components/ui/image";
+import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { Ionicons } from "@expo/vector-icons";
 import { getAuth } from "firebase/auth";
-import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
+import { Timestamp, collection, doc, getDoc, getDocs, query, setDoc, where } from "firebase/firestore";
 import { useEffect, useState } from "react";
-import { Dimensions, ScrollView, Text } from "react-native";
+import { Dimensions, ScrollView } from "react-native";
 import {
 	Gesture,
 	GestureDetector,
@@ -39,36 +40,74 @@ export default function IndexScreen() {
 
 	const [profiles, setProfiles] = useState<any[]>([]);
 	const [currentIndex, setCurrentIndex] = useState(0);
+	const [loading, setLoading] = useState(true);
 
 	const translateX = useSharedValue(0);
 
 	const currentProfile = profiles[currentIndex];
-	if (!currentProfile) {
-		return (
-			<SafeAreaView style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-				<Text>No more profiles. Try expanding your preferences or wait for more users.</Text>
-			</SafeAreaView>
-		);
-	}
 
 	useEffect(() => {
 		const getProfiles = async () => {
+			setLoading(true);
 			const currentUser = getAuth().currentUser;
 			if (!currentUser) return;
 	
 			try {
+				const currentUserDoc = await getDoc(doc(db, 'users', currentUser.uid));
+				if (!currentUserDoc.exists()) return;
+
+				const currentUserData = currentUserDoc.data();
+
 				const passesSnapshot = await getDocs(collection(db, 'users', currentUser.uid, 'passes'));
-				const passedUids = passesSnapshot.docs.map(doc => doc.id);
-	
-				const usersSnapshot = await getDocs(collection(db, 'users'));
+				const passesUids = passesSnapshot.docs.map(doc => doc.id);
+
+				const likesSnapshot = await getDocs(collection(db, 'users', currentUser.uid, 'likes'));
+				const likesUids = likesSnapshot.docs.map(doc => doc.id);
+
+				const usersRef = collection(db, 'users');
+
+				const today = new Date();
+				const minAge = currentUserData.ageRange[0];
+				const maxAge = currentUserData.ageRange[1];
+
+				const youngestBirthdate = Timestamp.fromDate(new Date(
+					today.getFullYear() - minAge,
+					today.getMonth(),
+					today.getDate()
+				));
+
+				const oldestBirthdate = Timestamp.fromDate(new Date(
+					today.getFullYear() - maxAge - 1,
+					today.getMonth(),
+					today.getDate()
+				));
+
+				const q = query(
+					usersRef,
+					where("dob", ">=", oldestBirthdate),
+					where("dob", "<=", youngestBirthdate)
+				);
+
+				const usersSnapshot = await getDocs(q);				  
+
 				const users = usersSnapshot.docs
-					.map(doc => doc.data())
-					.filter(user => user.uid !== currentUser.uid && !passedUids.includes(user.uid));
-					
+					.map(doc => ({
+						uid: doc.id,
+						...(doc.data() as any),
+					}))
+					.filter(user => 
+						user.uid !== currentUser.uid &&
+						!passesUids.includes(user.uid) &&
+						!likesUids.includes(user.uid) 
+						&& currentUserData.genderPreference.includes(user.gender)
+					);
+				console.log(users);
 				setProfiles(users);
 			} catch (error) {
 				console.log("Error fetching profiles: ", error);
 				alert("Failed to load profiles")
+			} finally {
+				setLoading(false);
 			}
 		};
 		getProfiles();
