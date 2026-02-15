@@ -41,6 +41,18 @@ import { ActivityIndicator, View } from "react-native";
 import { useTheme } from "@/ThemeContext";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Ionicons } from "@expo/vector-icons";
+import {
+	Accordion,
+	AccordionItem,
+	AccordionHeader,
+	AccordionTrigger,
+	AccordionTitleText,
+	AccordionContent,
+	AccordionContentText,
+	AccordionIcon,
+} from "@/components/ui/accordion";
+import { ChevronDownIcon } from "@/components/ui/icon";
+import { ChevronUpIcon } from "@/components/ui/icon";
 
 export const getChatPartnerProfile = async (
 	chatId: string,
@@ -91,6 +103,7 @@ export default function ChatRoom() {
 		photo: string | null;
 	} | null>(null);
 	const [messages, setMessages] = useState<IMessage[]>([]);
+	const [isExpanded, setIsExpanded] = useState(false);
 
 	const { colorMode } = useTheme();
 	const isDark = colorMode === "dark";
@@ -226,6 +239,32 @@ export default function ChatRoom() {
 						</Button>
 					</HStack>
 				</Card>
+				<Accordion
+					className="w-[90%] m-5 border border-outline-300"
+					type="multiple"
+				>
+					<AccordionItem value="a" className="border-b border-outline-300">
+						<AccordionHeader className="bg-background-0">
+							<AccordionTrigger>
+								{({ isExpanded }: { isExpanded: boolean }) => {
+									return (
+										<>
+											<AccordionTitleText>Ignite AI</AccordionTitleText>
+											{isExpanded ? (
+												<AccordionIcon as={ChevronUpIcon} />
+											) : (
+												<AccordionIcon as={ChevronDownIcon} />
+											)}
+										</>
+									);
+								}}
+							</AccordionTrigger>
+						</AccordionHeader>
+						<AccordionContent className="mt-0 pt-2 bg-background-50">
+							<Button></Button>
+						</AccordionContent>
+					</AccordionItem>
+				</Accordion>
 				<View className="flex-1 -mb-9">
 					<GiftedChat
 						renderAvatar={() => (

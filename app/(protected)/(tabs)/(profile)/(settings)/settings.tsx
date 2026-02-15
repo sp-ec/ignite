@@ -3,6 +3,7 @@ import { useTheme } from "@/ThemeContext";
 import { Button, ButtonText } from "@/components/ui/button";
 import {
 	Checkbox,
+	CheckboxGroup,
 	CheckboxIcon,
 	CheckboxIndicator,
 	CheckboxLabel,
@@ -165,23 +166,32 @@ export default function SettingsScreen() {
 					<Text className="text-lg mb-4 dark:text-zinc-200">
 						Gender Preferences
 					</Text>
-					{["man", "woman", "nonbinary", "other"].map((gender) => (
-						<Checkbox
-							key={gender}
-							isChecked={genderPref.includes(gender)}
-							onChange={() => updateGenderPref(gender)}
-							size="lg"
-							className="mb-2"
-							value={gender}
-						>
-							<CheckboxIndicator>
-								<CheckboxIcon as={CheckIcon} />
-							</CheckboxIndicator>
-							<CheckboxLabel>
-								{gender.charAt(0).toUpperCase() + gender.slice(1)}
-							</CheckboxLabel>
-						</Checkbox>
-					))}
+
+					<CheckboxGroup
+						value={genderPref}
+						onChange={(keys) => {
+							setGenderPref(keys);
+						}}
+					>
+						<VStack space="md">
+							{["man", "woman", "nonbinary", "other"].map((gender) => (
+								<Checkbox
+									key={gender}
+									value={gender}
+									size="lg"
+									aria-label={gender}
+								>
+									<CheckboxIndicator>
+										<CheckboxIcon as={CheckIcon} />
+									</CheckboxIndicator>
+									<CheckboxLabel className="dark:text-zinc-200">
+										{gender.charAt(0).toUpperCase() + gender.slice(1)}
+									</CheckboxLabel>
+								</Checkbox>
+							))}
+						</VStack>
+					</CheckboxGroup>
+
 					<Button className="bg-purple-500 mt-4 mb-4" onPress={updateDB}>
 						<ButtonText className="text-zinc-200 text-md" onPress={updateDB}>
 							Save Preferences

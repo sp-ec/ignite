@@ -11,9 +11,9 @@ import {
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useTheme } from "@/ThemeContext";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import {
 	collection,
@@ -86,45 +86,50 @@ export default function IndexScreen() {
 		return matchesData.filter((match) => match !== null);
 	};
 
-	useEffect(() => {
-		const auth = getAuth();
-		const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-			if (!currentUser) {
-				router.replace("/login");
-			} else {
-				try {
-					const q = query(usersCollection, where("uid", "==", currentUser.uid));
-					const qSnapshot = await getDocs(q);
-
-					if (!qSnapshot.empty) {
-						const currentUserDoc = qSnapshot.docs[0];
-						const matchesRef = collection(
-							db,
-							"users",
-							currentUserDoc.id,
-							"matches",
+	useFocusEffect(
+		useCallback(() => {
+			const auth = getAuth();
+			const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+				if (!currentUser) {
+					router.replace("/login");
+				} else {
+					try {
+						const q = query(
+							usersCollection,
+							where("uid", "==", currentUser.uid),
 						);
-						const matchesSnapshot = await getDocs(matchesRef);
-						const matchIds = matchesSnapshot.docs.map((doc) => doc.id.trim());
+						const qSnapshot = await getDocs(q);
 
-						// Pass currentUser.uid to filter out the logged-in user's name
-						const fullMatches = await fetchFullMatchDetails(
-							matchIds,
-							currentUser.uid,
-						);
+						if (!qSnapshot.empty) {
+							const currentUserDoc = qSnapshot.docs[0];
+							const matchesRef = collection(
+								db,
+								"users",
+								currentUserDoc.id,
+								"matches",
+							);
+							const matchesSnapshot = await getDocs(matchesRef);
+							const matchIds = matchesSnapshot.docs.map((doc) => doc.id.trim());
 
-						setMatches(fullMatches);
-						console.log("Matches: ", fullMatches);
+							// Pass currentUser.uid to filter out the logged-in user's name
+							const fullMatches = await fetchFullMatchDetails(
+								matchIds,
+								currentUser.uid,
+							);
+
+							setMatches(fullMatches);
+							console.log("Matches: ", fullMatches);
+						}
+					} catch (error) {
+						console.error("Error: ", error);
+					} finally {
+						setLoading(false);
 					}
-				} catch (error) {
-					console.error("Error: ", error);
-				} finally {
-					setLoading(false);
 				}
-			}
-		});
-		return unsubscribe;
-	}, []);
+			});
+			return unsubscribe;
+		}, []),
+	);
 
 	if (loading) {
 		return (
