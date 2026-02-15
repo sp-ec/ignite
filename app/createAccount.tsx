@@ -1,8 +1,9 @@
 import { useTheme } from "@/ThemeContext";
+import { Alert, AlertIcon, AlertText } from "@/components/ui/alert";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { HStack } from "@/components/ui/hstack";
-import { ChevronDownIcon } from "@/components/ui/icon";
+import { ChevronDownIcon, InfoIcon } from "@/components/ui/icon";
 import { Image } from "@/components/ui/image";
 import { Input, InputField } from "@/components/ui/input";
 import {
@@ -29,8 +30,10 @@ import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import React, { useState } from "react";
 import { ScrollView, View } from "react-native";
 import { db, storage } from "../FirebaseConfig";
+  
 
 export default function createAccount() {
+	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [name, setName] = useState("");
@@ -46,7 +49,7 @@ export default function createAccount() {
 		name?: string;
 		bio?: string;
 		day?: string;
-		dob?: string;
+		dateofbirth?: string;
 		gender?: string;
 		photos?: string;
 	}>({});
@@ -59,6 +62,7 @@ export default function createAccount() {
 		if (!validateInputs()) return;
 
 		try {
+			setErrorMessage(null);
 			const userCredential = await createUserWithEmailAndPassword(
 				auth,
 				email,
@@ -86,7 +90,8 @@ export default function createAccount() {
 			}
 		} catch (error: any) {
 			console.log(error);
-			alert("Create account failed: " + error.message);
+			//alert("Create account failed: " + error.message);
+			setErrorMessage("Sign in failed: " + error.message);
 		}
 	};
 
@@ -155,7 +160,7 @@ export default function createAccount() {
 			}
 
 			if (age < 18) {
-				newErrors.dob = "You must be at least 18 years old";
+				newErrors.dateofbirth = "You must be at least 18 years old";
 			}
 		}
 
@@ -166,10 +171,13 @@ export default function createAccount() {
 		setErrors(newErrors);
 
 		if (Object.keys(newErrors).length > 0) {
+			/*
 			alert(
 				"Create account failed from invalid fields: " +
 					Object.keys(newErrors).join(", "),
 			);
+			*/
+			setErrorMessage("Invalid fields: " + Object.keys(newErrors).join(", "));
 			return false;
 		}
 
@@ -211,6 +219,16 @@ export default function createAccount() {
 							Back to Login
 						</ButtonText>
 					</Button>
+					{errorMessage && (
+						<Alert
+							action="muted"
+							variant="outline"
+							className="w-64 mt-6 mb-6"
+						>
+							<AlertIcon as={InfoIcon} />
+							<AlertText>{errorMessage}</AlertText>
+						</Alert>
+					)}
 					<VStack className="mb-2">
 						<Input size="lg">
 							<InputField
@@ -283,7 +301,8 @@ export default function createAccount() {
 									await ImagePicker.requestMediaLibraryPermissionsAsync();
 
 								if (permissionResult.granted === false) {
-									alert("Permission to access camera roll is required!");
+									//alert("Permission to access camera roll is required!");
+									setErrorMessage("Permission to access camera roll is required!");
 									return;
 								}
 
@@ -299,7 +318,8 @@ export default function createAccount() {
 										const uris = result.assets.map((asset) => asset.uri);
 
 										if (uris.length > 3) {
-											alert("You can only select up to 3 photos");
+											//alert("You can only select up to 3 photos");
+											setErrorMessage("You can only select up to 3 photos");
 											setPhotos(uris.slice(0, 3));
 										} else {
 											setPhotos(uris);
@@ -439,8 +459,8 @@ export default function createAccount() {
 							</Select>
 						</VStack>
 					</HStack>
-					{errors.dob && (
-						<Text className="text-red-500 text-sm mb-2">{errors.dob}</Text>
+					{errors.dateofbirth && (
+						<Text className="text-red-500 text-sm mb-2">{errors.dateofbirth}</Text>
 					)}
 
 					<VStack className="mb-4">

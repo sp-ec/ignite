@@ -93,7 +93,7 @@ export default function Login() {
 			<Text className="mb-32 ">Making connections easier.</Text>
 			{errorMessage && (
 				<Alert
-					action="error"
+					action="muted"
 					variant="outline"
 					className="w-64 mb-6"
 				>
