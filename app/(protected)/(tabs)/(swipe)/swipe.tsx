@@ -2,8 +2,13 @@ import { db } from "@/FirebaseConfig";
 import { Card } from "@/components/ui/card";
 import { HStack } from "@/components/ui/hstack";
 import { Image } from "@/components/ui/image";
+import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { Ionicons } from "@expo/vector-icons";
+import { getAuth } from "firebase/auth";
+import { Timestamp, collection, doc, getDoc, getDocs, query, setDoc, where } from "firebase/firestore";
+import { useEffect, useState } from "react";
+import { Dimensions, ScrollView } from "react-native";
 import {
 	Gesture,
 	GestureDetector,
@@ -229,7 +234,6 @@ export default function IndexScreen() {
 													)}
 													<Text className="text-lg ml-2">
 														{capitalize(currentProfile.gender)}
-														{capitalize(currentProfile.gender)}
 													</Text>
 												</HStack>
 											</HStack>
@@ -278,7 +282,6 @@ export default function IndexScreen() {
 								size={32}
 								color={"#AD46FF"}
 								className="p-3 bg-purple-100 rounded-full mr-4"
-								style={{ overflow: "hidden" }} 
 								style={{ overflow: "hidden" }} 
 							/>
 						</Animated.View>
