@@ -1,3 +1,4 @@
+import { useTheme } from "@/ThemeContext";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { HStack } from "@/components/ui/hstack";
@@ -28,7 +29,6 @@ import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import React, { useState } from "react";
 import { ScrollView, View } from "react-native";
 import { db, storage } from "../FirebaseConfig";
-import { useTheme } from "@/ThemeContext";
 
 export default function createAccount() {
 	const [email, setEmail] = useState("");
@@ -78,7 +78,7 @@ export default function createAccount() {
 				gender: gender,
 				photos: photoUrls,
 				ageRange: [18, 60],
-				genderPreference: ["men", "women", "nonbinary"],
+				genderPreference: ["man", "woman", "nonbinary", "other"],
 			});
 
 			if (user) {
