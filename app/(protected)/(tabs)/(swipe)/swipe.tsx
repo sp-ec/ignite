@@ -56,7 +56,10 @@ export default function IndexScreen() {
 
 	const translateX = useSharedValue(0);
 
-	const currentProfile = profiles[currentIndex];
+	const currentProfile =
+		profiles.length > 0 && currentIndex < profiles.length
+			? profiles[currentIndex]
+			: null;
 
 	useEffect(() => {
 		const getProfiles = async () => {
@@ -136,7 +139,7 @@ export default function IndexScreen() {
 			}
 		};
 		getProfiles();
-	}, [currentIndex]);
+	}, []);
 
 	const handleSwipe = async (
 		swipedUserId: string,
@@ -246,6 +249,25 @@ export default function IndexScreen() {
 		);
 	}
 
+	if (
+		(!loading && profiles.length === 0) ||
+		currentIndex >= profiles.length ||
+		!currentProfile
+	) {
+		return (
+			<View
+				style={{
+					flex: 1,
+					justifyContent: "center",
+					alignItems: "center",
+					backgroundColor: bgColor,
+				}}
+			>
+				<Text className="text-xl">No more profiles found!</Text>
+			</View>
+		);
+	}
+
 	return (
 		<GestureHandlerRootView style={{ flex: 1 }}>
 			<GestureDetector gesture={panGesture}>
@@ -266,7 +288,7 @@ export default function IndexScreen() {
 										<Card className="mb-2 p-0 flex">
 											<Image
 												source={{
-													uri: currentProfile.photos?.[0],
+													uri: currentProfile.photos[0],
 												}}
 												alt="Profile Picture"
 												className="w-[360px] h-[380px] rounded-md"

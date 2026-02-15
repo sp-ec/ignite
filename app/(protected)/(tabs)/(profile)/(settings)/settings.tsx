@@ -165,12 +165,12 @@ export default function SettingsScreen() {
 					<Text className="text-lg mb-4 dark:text-zinc-200">
 						Gender Preferences
 					</Text>
-					{["man", "woman", "non-binary", "other"].map((gender) => (
+					{["man", "woman", "nonbinary", "other"].map((gender) => (
 						<Checkbox
 							key={gender}
 							isChecked={genderPref.includes(gender)}
 							onChange={() => updateGenderPref(gender)}
-							size="md"
+							size="lg"
 							className="mb-2"
 							value={gender}
 						>

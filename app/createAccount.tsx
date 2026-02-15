@@ -78,7 +78,7 @@ export default function createAccount() {
 				gender: gender,
 				photos: photoUrls,
 				ageRange: [18, 60],
-				genderPreference: ["men", "women", "non-binary"],
+				genderPreference: ["men", "women", "nonbinary"],
 			});
 
 			if (user) {
