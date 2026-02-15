@@ -8,14 +8,9 @@ import {
 } from "@/components/ui/checkbox";
 import { HStack } from "@/components/ui/hstack";
 import { CheckIcon } from "@/components/ui/icon";
-import {
-	Slider,
-	SliderFilledTrack,
-	SliderThumb,
-	SliderTrack,
-} from "@/components/ui/slider";
 import { VStack } from "@/components/ui/vstack";
 import { Ionicons } from "@expo/vector-icons";
+import MultiSlider from "@ptomasroos/react-native-multi-slider";
 import { useRouter } from "expo-router";
 import { getAuth } from "firebase/auth";
 import { useState } from "react";
@@ -23,8 +18,7 @@ import { Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SettingsScreen() {
-	const [minAge, setMinAge] = useState(18);
-	const [maxAge, setMaxAge] = useState(60);
+	const [ageRange, setAgeRange] = useState<[number, number]>([18, 60]);
 
 	const router = useRouter();
 
@@ -55,46 +49,35 @@ export default function SettingsScreen() {
 					<Text className="text-2xl ml-6 mb-2">Settings</Text>
 				</HStack>
 				<Text className="text-xl mb-4">Match Preferences</Text>
-				<Text className="text-md mb-4">Minimum Age: {minAge}</Text>
-				<Slider
-					defaultValue={18}
-					size="md"
-					className="mb-8"
-					orientation="horizontal"
-					isDisabled={false}
-					isReversed={false}
-					minValue={18}
-					maxValue={100}
+				<Text className="text-md mb-4">
+					Age Range: {ageRange[0]} - {ageRange[1]}
+				</Text>
+				<MultiSlider
+					values={ageRange}
+					onValuesChange={(values) => setAgeRange(values as [number, number])}
+					min={18}
+					max={100}
 					step={1}
-					onChange={(value) => {
-						setMinAge(value);
+					sliderLength={280} 
+					selectedStyle={{ backgroundColor: "#9333EA" }} 
+					unselectedStyle={{ backgroundColor: "#E5E7EB" }} 
+					markerStyle={{
+						backgroundColor: "#9333EA", 
+						height: 24,
+						width: 24,
+						borderRadius: 12,
+						borderWidth: 0,
 					}}
-				>
-					<SliderTrack>
-						<SliderFilledTrack className="bg-purple-600" />
-					</SliderTrack>
-					<SliderThumb className="bg-purple-600" />
-				</Slider>
-				<Text className="text-md mb-4">Maximum Age: {maxAge}</Text>
-				<Slider
-					defaultValue={60}
-					size="md"
-					className="mb-8"
-					orientation="horizontal"
-					isDisabled={false}
-					isReversed={false}
-					minValue={18}
-					maxValue={100}
-					step={1}
-					onChange={(value) => {
-						setMaxAge(value);
+					pressedMarkerStyle={{
+						height: 28,
+						width: 28,
+						borderRadius: 14,
+						backgroundColor: "#9333EA",
+						borderWidth: 0,
 					}}
-				>
-					<SliderTrack>
-						<SliderFilledTrack className="bg-purple-600" />
-					</SliderTrack>
-					<SliderThumb className="bg-purple-600" />
-				</Slider>
+					containerStyle={{ height: 40 }}
+				/>
+
 				<Text className="text-md mb-4">Gender Preferences</Text>
 				<Checkbox isDisabled={false} isInvalid={false} size="md" value="men">
 					<CheckboxIndicator>
