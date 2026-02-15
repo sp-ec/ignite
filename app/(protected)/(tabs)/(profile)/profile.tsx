@@ -1,10 +1,11 @@
-import { db } from "@/FirebaseConfig";
+import { db, storage } from "@/FirebaseConfig";
+import { useTheme } from "@/ThemeContext";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { HStack } from "@/components/ui/hstack";
 import { ChevronDownIcon } from "@/components/ui/icon";
 import { Image } from "@/components/ui/image";
-import { View } from "react-native";
 import { Input, InputField } from "@/components/ui/input";
 import {
 	Select,
@@ -31,12 +32,11 @@ import {
 	setDoc,
 	where,
 } from "firebase/firestore";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Text } from "react-native";
+import { ActivityIndicator, Text, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useTheme } from "@/ThemeContext";
-import { Card } from "@/components/ui/card";
 
 const onDateChange = (date: { month: string; day: string; year: string }) => {
 	console.log("Selected date:", date);
@@ -132,6 +132,8 @@ export default function IndexScreen() {
 		if (!user) return;
 
 		try {
+			const photoUrls = await uploadPhotos(user.uid, photos);
+
 			const userDocRef = doc(db, "users", user.uid);
 
 			await setDoc(
@@ -140,7 +142,7 @@ export default function IndexScreen() {
 					name,
 					bio,
 					gender,
-					photos,
+					photos: photoUrls,
 				},
 				{ merge: true },
 			);
@@ -150,6 +152,25 @@ export default function IndexScreen() {
 			alert("Error saving profile: " + error);
 		}
 	};
+
+	const uploadPhotos = async (uid: string, uris: string[]) => {
+		const uploadedUrls: string[] = [];
+	
+		for (let i = 0; i < uris.length; i++) {
+		  const uri = uris[i];
+	
+		  const response = await fetch(uri);
+		  const blob = await response.blob();
+	
+		  const storageRef = ref(storage, `users/${uid}/photo_${i}.jpg`);
+		  await uploadBytes(storageRef, blob);
+	
+		  const downloadUrl = await getDownloadURL(storageRef);
+		  uploadedUrls.push(downloadUrl);
+		}
+	
+		return uploadedUrls;
+	  };
 
 	const { colorMode } = useTheme();
 	const isDark = colorMode === "dark";

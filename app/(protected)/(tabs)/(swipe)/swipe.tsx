@@ -1,30 +1,29 @@
-import { Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { HStack } from "@/components/ui/hstack";
-import { VStack } from "@/components/ui/vstack";
-import { Image } from "@/components/ui/image";
+import { db } from "@/FirebaseConfig";
 import { Card } from "@/components/ui/card";
-import { ScrollView } from "react-native";
-import { useState } from "react";
-import { Dimensions } from "react-native";
+import { HStack } from "@/components/ui/hstack";
+import { Image } from "@/components/ui/image";
+import { VStack } from "@/components/ui/vstack";
 import { Ionicons } from "@expo/vector-icons";
+import { getAuth } from "firebase/auth";
+import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
+import { useEffect, useState } from "react";
+import { Dimensions, ScrollView, Text } from "react-native";
 import {
 	Gesture,
 	GestureDetector,
 	GestureHandlerRootView,
 } from "react-native-gesture-handler";
 import Animated, {
-	useSharedValue,
-	useAnimatedStyle,
-	withSpring,
-	ZoomIn,
-	ZoomOut,
-	runOnJS,
-	SlideInRight,
-	SlideOutRight,
 	SlideInLeft,
-	SlideOutLeft, // 1. Import runOnJS
+	SlideInRight,
+	SlideOutLeft,
+	SlideOutRight,
+	runOnJS,
+	useAnimatedStyle,
+	useSharedValue,
+	withSpring
 } from "react-native-reanimated";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const capitalize = (str: string) => {
 	if (!str) return str;
@@ -35,21 +34,81 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.25;
 
 export default function IndexScreen() {
-	const [gender, setGender] = useState("woman");
-
-	// 2. Add state to control visibility
 	const [showRejectIcon, setShowRejectIcon] = useState(false);
 	const [showAcceptIcon, setShowAcceptIcon] = useState(false);
 
+	const [profiles, setProfiles] = useState<any[]>([]);
+	const [currentIndex, setCurrentIndex] = useState(0);
+
 	const translateX = useSharedValue(0);
+
+	const currentProfile = profiles[currentIndex];
+	if (!currentProfile) {
+		return (
+			<SafeAreaView style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+				<Text>No more profiles. Try expanding your preferences or wait for more users.</Text>
+			</SafeAreaView>
+		);
+	}
+
+	useEffect(() => {
+		const getProfiles = async () => {
+			const currentUser = getAuth().currentUser;
+			if (!currentUser) return;
+	
+			try {
+				const passesSnapshot = await getDocs(collection(db, 'users', currentUser.uid, 'passes'));
+				const passedUids = passesSnapshot.docs.map(doc => doc.id);
+	
+				const usersSnapshot = await getDocs(collection(db, 'users'));
+				const users = usersSnapshot.docs
+					.map(doc => doc.data())
+					.filter(user => user.uid !== currentUser.uid && !passedUids.includes(user.uid));
+					
+				setProfiles(users);
+			} catch (error) {
+				console.log("Error fetching profiles: ", error);
+				alert("Failed to load profiles")
+			}
+		};
+		getProfiles();
+	}, []);
+	
+	const handleSwipe = async (swipedUserId: string, direction: "left" | "right") => {
+		const currentUser = getAuth().currentUser;
+		if (!currentUser) return;
+	
+		const userId = currentUser.uid;
+	
+		if (direction === "right") {
+			const likeRef = doc(db, 'users', userId, 'likes', swipedUserId);
+			await setDoc(likeRef, { createdAt: new Date() });
+	
+			const reverseLikeRef = doc(db, 'users', swipedUserId, 'likes', userId);
+			const reverseDoc = await getDoc(reverseLikeRef);
+	
+			if (reverseDoc.exists()) {
+				const matchId = [userId, swipedUserId].sort().join("_");
+				const matchRef = doc(db, 'matches', matchId);
+	
+				await setDoc(matchRef, {
+					users: [userId, swipedUserId],
+					createdAt: new Date(),
+				})
+			}
+		} else {
+			const passRef = doc(db, 'users', userId, 'passes', swipedUserId);
+			await setDoc(passRef, {
+				createdAt: new Date()
+			});
+		}
+	}
 
 	const panGesture = Gesture.Pan()
 		.activeOffsetX([-10, 10])
 		.onUpdate((event) => {
 			translateX.value = event.translationX;
 
-			// 3. Check threshold and update React State via runOnJS
-			// We check !showIcon to avoid triggering a re-render 60 times a second
 			if (Math.abs(event.translationX) > SWIPE_THRESHOLD * 0.2) {
 				const isRightSwipe = event.translationX > 0;
 				if (isRightSwipe && !showAcceptIcon) {
@@ -67,14 +126,18 @@ export default function IndexScreen() {
 		.onEnd(() => {
 			if (Math.abs(translateX.value) > SWIPE_THRESHOLD) {
 				const direction = translateX.value > 0 ? "right" : "left";
+				const swipedUid = profiles[currentIndex].uid;
+
 				translateX.value = withSpring(
 					direction === "right" ? SCREEN_WIDTH * 1.2 : -SCREEN_WIDTH * 1.2,
 					{},
 					() => {
 						translateX.value = 0;
-						// Reset state after animation
 						runOnJS(setShowRejectIcon)(false);
 						runOnJS(setShowAcceptIcon)(false);
+
+						runOnJS(handleSwipe)(swipedUid, direction);
+						runOnJS(setCurrentIndex)(prev => prev + 1);
 					},
 				);
 			} else {
@@ -94,7 +157,7 @@ export default function IndexScreen() {
 	return (
 		<GestureHandlerRootView style={{ flex: 1 }}>
 			<GestureDetector gesture={panGesture}>
-				{/* We removed the <View> wrapper here to ensure gestures work properly */}
+				{}
 				<Animated.View style={{ flex: 1 }}>
 					<ScrollView
 						contentContainerStyle={{
@@ -111,17 +174,17 @@ export default function IndexScreen() {
 										<Card className="mb-2 p-0 flex">
 											<Image
 												source={{
-													uri: "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
+													uri: currentProfile.photos?.[0],
 												}}
 												alt="Profile Picture"
 												className="w-[360px] h-[380px] rounded-md"
 											/>
 											<HStack className="justify-between p-4">
-												<Text className="text-2xl">Jane, 28</Text>
+												<Text className="text-2xl">{currentProfile.name}, {currentProfile.age}</Text>
 												<HStack className="justify-start items-center">
-													{gender === "man" ? (
+													{currentProfile.gender === "man" ? (
 														<Ionicons name="male" size={24} color={"#000"} />
-													) : gender === "woman" ? (
+													) : currentProfile.gender === "woman" ? (
 														<Ionicons name="female" size={24} color={"#000"} />
 													) : (
 														<Ionicons
@@ -131,7 +194,7 @@ export default function IndexScreen() {
 														/>
 													)}
 													<Text className="text-lg ml-2">
-														{capitalize(gender)}
+														{capitalize(currentProfile.gender)}
 													</Text>
 												</HStack>
 											</HStack>
@@ -139,20 +202,17 @@ export default function IndexScreen() {
 
 										<Card className="mb-4">
 											<Text className="text-lg mt-4 ">
-												Meow meow meow Meow meow meow Meow meow meow Meow meow
-												meow Meow meow meow Meow meow meow Meow meow meow Meow
-												meow meow Meow meow meow Meow meow meow Meow meow
-												meow{" "}
+												{currentProfile.bio || "No bio available"}
 											</Text>
 										</Card>
-										{/* Extra images removed for brevity */}
+										{}
 									</VStack>
 								</Card>
 							</SafeAreaView>
 						</Animated.View>
 					</ScrollView>
 
-					{/* 4. Use the State Variable, NOT the Shared Value */}
+					{}
 					{showRejectIcon && (
 						<Animated.View
 							className="absolute z-50 inset-0 justify-center items-start"
@@ -166,7 +226,7 @@ export default function IndexScreen() {
 								size={32}
 								color={"#FF637E"}
 								className="p-3 bg-red-100 rounded-full ml-4"
-								style={{ overflow: "hidden" }} // Added to prevent iOS visual bugs
+								style={{ overflow: "hidden" }}
 							/>
 						</Animated.View>
 					)}
@@ -183,7 +243,7 @@ export default function IndexScreen() {
 								size={32}
 								color={"#AD46FF"}
 								className="p-3 bg-purple-100 rounded-full mr-4"
-								style={{ overflow: "hidden" }} // Added to prevent iOS visual bugs
+								style={{ overflow: "hidden" }} 
 							/>
 						</Animated.View>
 					)}
