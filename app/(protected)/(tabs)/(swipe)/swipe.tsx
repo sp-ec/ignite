@@ -6,7 +6,17 @@ import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { Ionicons } from "@expo/vector-icons";
 import { getAuth } from "firebase/auth";
-import { Timestamp, collection, doc, getDoc, getDocs, query, setDoc, where } from "firebase/firestore";
+import { ActivityIndicator, View } from "react-native";
+import {
+	Timestamp,
+	collection,
+	doc,
+	getDoc,
+	getDocs,
+	query,
+	setDoc,
+	where,
+} from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { Dimensions, ScrollView } from "react-native";
 import {
@@ -22,9 +32,11 @@ import Animated, {
 	runOnJS,
 	useAnimatedStyle,
 	useSharedValue,
-	withSpring
+	withSpring,
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTheme } from "@/ThemeContext";
+import { router } from "expo-router";
 
 const capitalize = (str: string) => {
 	if (!str) return str;
@@ -50,98 +62,114 @@ export default function IndexScreen() {
 		const getProfiles = async () => {
 			setLoading(true);
 			const currentUser = getAuth().currentUser;
-			if (!currentUser) return;
-	
+
+			if (!currentUser) {
+				router.replace("/login");
+				return;
+			}
+
 			try {
-				const currentUserDoc = await getDoc(doc(db, 'users', currentUser.uid));
+				const currentUserDoc = await getDoc(doc(db, "users", currentUser.uid));
 				if (!currentUserDoc.exists()) return;
 
 				const currentUserData = currentUserDoc.data();
 
-				const passesSnapshot = await getDocs(collection(db, 'users', currentUser.uid, 'passes'));
-				const passesUids = passesSnapshot.docs.map(doc => doc.id);
+				const passesSnapshot = await getDocs(
+					collection(db, "users", currentUser.uid, "passes"),
+				);
+				const passesUids = passesSnapshot.docs.map((doc) => doc.id);
 
-				const likesSnapshot = await getDocs(collection(db, 'users', currentUser.uid, 'likes'));
-				const likesUids = likesSnapshot.docs.map(doc => doc.id);
+				const likesSnapshot = await getDocs(
+					collection(db, "users", currentUser.uid, "likes"),
+				);
+				const likesUids = likesSnapshot.docs.map((doc) => doc.id);
 
-				const usersRef = collection(db, 'users');
+				const usersRef = collection(db, "users");
 
 				const today = new Date();
 				const minAge = currentUserData.ageRange[0];
 				const maxAge = currentUserData.ageRange[1];
 
-				const youngestBirthdate = Timestamp.fromDate(new Date(
-					today.getFullYear() - minAge,
-					today.getMonth(),
-					today.getDate()
-				));
+				const youngestBirthdate = Timestamp.fromDate(
+					new Date(
+						today.getFullYear() - minAge,
+						today.getMonth(),
+						today.getDate(),
+					),
+				);
 
-				const oldestBirthdate = Timestamp.fromDate(new Date(
-					today.getFullYear() - maxAge - 1,
-					today.getMonth(),
-					today.getDate()
-				));
+				const oldestBirthdate = Timestamp.fromDate(
+					new Date(
+						today.getFullYear() - maxAge - 1,
+						today.getMonth(),
+						today.getDate(),
+					),
+				);
 
 				const q = query(
 					usersRef,
 					where("dob", ">=", oldestBirthdate),
-					where("dob", "<=", youngestBirthdate)
+					where("dob", "<=", youngestBirthdate),
 				);
 
-				const usersSnapshot = await getDocs(q);				  
+				const usersSnapshot = await getDocs(q);
 
 				const users = usersSnapshot.docs
-					.map(doc => ({
+					.map((doc) => ({
 						uid: doc.id,
 						...(doc.data() as any),
 					}))
-					.filter(user => 
-						user.uid !== currentUser.uid &&
-						!passesUids.includes(user.uid) &&
-						!likesUids.includes(user.uid) 
-						&& currentUserData.genderPreference.includes(user.gender)
+					.filter(
+						(user) =>
+							user.uid !== currentUser.uid &&
+							!passesUids.includes(user.uid) &&
+							!likesUids.includes(user.uid) &&
+							currentUserData.genderPreference.includes(user.gender),
 					);
 				console.log(users);
 				setProfiles(users);
 			} catch (error) {
 				console.log("Error fetching profiles: ", error);
-				alert("Failed to load profiles")
+				alert("Failed to load profiles");
 			} finally {
 				setLoading(false);
 			}
 		};
 		getProfiles();
-	}, []);
-	
-	const handleSwipe = async (swipedUserId: string, direction: "left" | "right") => {
+	}, [currentIndex]);
+
+	const handleSwipe = async (
+		swipedUserId: string,
+		direction: "left" | "right",
+	) => {
 		const currentUser = getAuth().currentUser;
 		if (!currentUser) return;
-	
+
 		const userId = currentUser.uid;
-	
+
 		if (direction === "right") {
-			const likeRef = doc(db, 'users', userId, 'likes', swipedUserId);
+			const likeRef = doc(db, "users", userId, "likes", swipedUserId);
 			await setDoc(likeRef, { createdAt: new Date() });
-	
-			const reverseLikeRef = doc(db, 'users', swipedUserId, 'likes', userId);
+
+			const reverseLikeRef = doc(db, "users", swipedUserId, "likes", userId);
 			const reverseDoc = await getDoc(reverseLikeRef);
-	
+
 			if (reverseDoc.exists()) {
 				const matchId = [userId, swipedUserId].sort().join("_");
-				const matchRef = doc(db, 'matches', matchId);
-	
+				const matchRef = doc(db, "matches", matchId);
+
 				await setDoc(matchRef, {
 					users: [userId, swipedUserId],
 					createdAt: new Date(),
-				})
+				});
 			}
 		} else {
-			const passRef = doc(db, 'users', userId, 'passes', swipedUserId);
+			const passRef = doc(db, "users", userId, "passes", swipedUserId);
 			await setDoc(passRef, {
-				createdAt: new Date()
+				createdAt: new Date(),
 			});
 		}
-	}
+	};
 
 	const panGesture = Gesture.Pan()
 		.activeOffsetX([-10, 10])
@@ -176,7 +204,7 @@ export default function IndexScreen() {
 						runOnJS(setShowAcceptIcon)(false);
 
 						runOnJS(handleSwipe)(swipedUid, direction);
-						runOnJS(setCurrentIndex)(prev => prev + 1);
+						runOnJS(setCurrentIndex)((prev) => prev + 1);
 					},
 				);
 			} else {
@@ -192,6 +220,31 @@ export default function IndexScreen() {
 			{ rotate: `${translateX.value / 60}deg` },
 		],
 	}));
+
+	const { colorMode } = useTheme();
+	const isDark = colorMode === "dark";
+
+	// Theme Colors
+	const bgColor = isDark ? "#18181B" : "#F5F5F5";
+
+	if (loading) {
+		return (
+			<View
+				style={{
+					flex: 1,
+					backgroundColor: bgColor,
+					justifyContent: "center",
+					alignItems: "center",
+				}}
+			>
+				<SafeAreaView
+					style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+				>
+					<ActivityIndicator size="large" color="AD46FF" />
+				</SafeAreaView>
+			</View>
+		);
+	}
 
 	return (
 		<GestureHandlerRootView style={{ flex: 1 }}>
@@ -219,7 +272,9 @@ export default function IndexScreen() {
 												className="w-[360px] h-[380px] rounded-md"
 											/>
 											<HStack className="justify-between p-4">
-												<Text className="text-2xl">{currentProfile.name}, {currentProfile.age}</Text>
+												<Text className="text-2xl">
+													{currentProfile.name}, {currentProfile.age}
+												</Text>
 												<HStack className="justify-start items-center">
 													{currentProfile.gender === "man" ? (
 														<Ionicons name="male" size={24} color={"#000"} />
@@ -282,7 +337,7 @@ export default function IndexScreen() {
 								size={32}
 								color={"#AD46FF"}
 								className="p-3 bg-purple-100 rounded-full mr-4"
-								style={{ overflow: "hidden" }} 
+								style={{ overflow: "hidden" }}
 							/>
 						</Animated.View>
 					)}
